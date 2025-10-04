@@ -1,3 +1,4 @@
+// app\platforms\binance\page.tsx
 "use client";
 
 import useSWR from "swr";

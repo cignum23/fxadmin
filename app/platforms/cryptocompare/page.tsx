@@ -1,3 +1,4 @@
+//app\platforms\cryptocompare\page.tsx
 import { fetchCryptoComparePrices } from "@/lib/api";
 
 export default async function CryptoComparePage() {

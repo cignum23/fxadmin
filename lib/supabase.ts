@@ -1,25 +1,17 @@
+// lib/supabase.ts
 import { createClient } from "@supabase/supabase-js";
 
-export const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-  // process.env.SUPABASE_SERVICE_KEY!
-);
+/* FIX: Validate environment variables before creating client.
+   This avoids unhelpful runtime exceptions and helps to fail fast when
+   env vars are missing. */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "Supabase env not set. Some features that depend on Supabase will fail. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  );
+}
 
-
-// import { createBrowserClient } from "@supabase/ssr";
-
-// const supabaseUrl = process.env.SUPABASE_URL;
-// const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-// if (!supabaseUrl || !supabaseKey) {
-//   throw new Error("Supabase environment variables are not set.");
-// }
-
-// export const createClient = () =>
-//   createBrowserClient(
-//     supabaseUrl,
-//     supabaseKey,
-//   );
-
+export const supabase = createClient(supabaseUrl ?? "", supabaseAnonKey ?? "");
