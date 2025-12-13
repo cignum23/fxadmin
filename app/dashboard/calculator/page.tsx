@@ -1,135 +1,143 @@
 
 
-// app/platforms/calculator/page.tsx
+// app\dashboard\calculator\page.tsx
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import useSWR from "swr";
 import {
   fetchCoinGeckoPrices,
   CoinGeckoMarketCoin,
 } from "@/lib/api";
-import { FxVendor } from "@/lib/types";
+import { CRYPTO_PLATFORMS, CryptoPlatformId } from "@/lib/constants/cryptoPlatforms";
+import { usePlatformRates } from "@/lib/hooks/usePlatformRates";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, ArrowRightLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-// Safe fetcher for SWR
-const fetcherJson = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch vendors");
-  return res.json();
-};
 
 export default function CalculatorPage() {
+  // State management
   const [amount, setAmount] = useState<string>("100");
   const [currency, setCurrency] = useState<"USD" | "NGN">("USD");
-  const [platformId, setPlatformId] = useState<string>("");
+  const [platformId, setPlatformId] = useState<CryptoPlatformId>("coingecko");
   const [selectedCoinSymbol, setSelectedCoinSymbol] = useState<string>("BTC");
-  const [error, setError] = useState<string>("");
 
-  // ✅ SWR hooks for fetching crypto & FX data
+  // Fetch platform rates from database (updated every 5 minutes by cron)
+  const { getRate: getPlatformRate, isLoading: ratesLoading } = usePlatformRates();
+
+  // Fetch crypto list for autocomplete (CoinGecko only for list)
   const { data: geckoCoins } = useSWR<CoinGeckoMarketCoin[]>(
     ["gecko", "usd"],
     () => fetchCoinGeckoPrices("usd"),
     { refreshInterval: 30000 }
   );
 
-  const {
-    data: vendors,
-    mutate: refetchVendors,
-    isValidating,
-  } = useSWR<FxVendor[] | null>("/api/fx/vendors", fetcherJson, {
-    refreshInterval: 30000,
-    revalidateOnFocus: false,
-  });
+  interface Vendor {
+    name: string;
+    rate: number;
+  }
 
-const safeVendors = useMemo<FxVendor[]>(() => {
-  return Array.isArray(vendors) ? vendors : [];
-}, [vendors]);
+  interface CoinMarketCapCoin {
+    name: string;
+    quote?: {
+      USD?: {
+        price?: number;
+      };
+    };
+  }
 
-  // ✅ Default vendor selection
-  useEffect(() => {
-    if (!platformId && safeVendors.length > 0) {
-      setPlatformId(safeVendors[0].name);
+  // Per-platform live FX rate fetchers (USD->NGN)
+  async function fetchLiveRate(platform: CryptoPlatformId): Promise<number> {
+    try {
+      if (platform === "coingecko") {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,ngn", { cache: "no-store" });
+        const data = await res.json();
+        const usd = data?.bitcoin?.usd;
+        const ngn = data?.bitcoin?.ngn;
+        if (usd && ngn) return Math.round((ngn / usd) * 100) / 100;
+      } else if (platform === "binance") {
+        const res = await fetch("https://api.binance.com/api/v3/avgPrice?symbol=USDTNGN", { cache: "no-store" });
+        const data = await res.json();
+        const price = Number(data?.price);
+        if (price && price > 0) return Math.round(price * 100) / 100;
+      } else if (platform === "cryptocompare") {
+        // Derive USD->NGN using BTC prices: NGN from CoinGecko, USD from CryptoCompare
+        const [geckoRes, ccRes] = await Promise.all([
+          fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=ngn", { cache: "no-store" }),
+          fetch("https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD", { cache: "no-store" }),
+        ]);
+        const geckoData = await geckoRes.json();
+        const ccData = await ccRes.json();
+        const btcNgn = geckoData?.bitcoin?.ngn;
+        const btcUsd = ccData?.USD;
+        if (btcNgn && btcUsd && btcUsd > 0) return Math.round((btcNgn / btcUsd) * 100) / 100;
+        return 0;
+      } else if (platform === "coinmarketcap") {
+        // Derive USD->NGN using BTC prices: NGN from CoinGecko, USD from CMC listings
+        const [geckoRes, cmcRes] = await Promise.all([
+          fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=ngn", { cache: "no-store" }),
+          fetch("/api/coinmarketcap", { cache: "no-store" }),
+        ]);
+        const geckoData = await geckoRes.json();
+        const cmcData = await cmcRes.json();
+        const btcNgn = geckoData?.bitcoin?.ngn;
+        const btc = Array.isArray(cmcData) ? cmcData.find((c: CoinMarketCapCoin) => String(c.name).toLowerCase() === "bitcoin") : null;
+        const btcUsd = btc?.quote?.USD?.price;
+        if (btcNgn && btcUsd && btcUsd > 0) return Math.round((btcNgn / btcUsd) * 100) / 100;
+        return 0;
+      }
+      return 0;
+    } catch {
+      return 0;
     }
-  }, [safeVendors, platformId]);
+  }
 
-  const selectedPlatform = useMemo(() => {
-    return safeVendors.find((p) => p.name === platformId);
-  }, [safeVendors, platformId]);
+  // Live rate for currently selected platform
+  const { data: liveRate } = useSWR<number>(
+    ["platform-live-rate", platformId],
+    () => fetchLiveRate(platformId),
+    { refreshInterval: 30000 }
+  );
 
+  // Determine if current platform is using a live rate
+  const isUsingLive = useMemo(() => {
+    return typeof liveRate === "number" && liveRate > 0;
+  }, [liveRate]);
+
+  // Selected crypto (always from CoinGecko for list)
   const selectedCrypto = useMemo(() => {
     return geckoCoins?.find((c) => c.symbol.toUpperCase() === selectedCoinSymbol);
   }, [geckoCoins, selectedCoinSymbol]);
 
-  // ✅ Compute vendor rows safely
+  // Calculate conversion amounts using platform-specific rate
   const calculations = useMemo(() => {
     const numAmount = Number.parseFloat(amount) || 0;
-    if (!selectedPlatform || !selectedCrypto || !selectedPlatform.rate) {
-      return { usd: 0, crypto: 0, ngn: 0 };
+    
+    // Get the rate for the selected platform
+    const dbRate = getPlatformRate(platformId);
+    const platformRate = isUsingLive ? liveRate! : dbRate;
+    
+    if (!platformRate || platformRate === 0 || !selectedCrypto || !selectedCrypto.current_price) {
+      return { usd: 0, crypto: 0, ngn: 0, platformRate: 0 };
     }
 
-    const usdAmount = currency === "NGN" ? numAmount / selectedPlatform.rate : numAmount;
+    const usdAmount = currency === "NGN" ? numAmount / platformRate : numAmount;
     const cryptoAmount = usdAmount / selectedCrypto.current_price;
-    const ngnAmount = usdAmount * selectedPlatform.rate;
+    const ngnAmount = usdAmount * platformRate;
 
     return {
       usd: usdAmount,
       crypto: cryptoAmount,
       ngn: ngnAmount,
+      platformRate,
     };
-  }, [amount, currency, selectedPlatform, selectedCrypto]);
+  }, [amount, currency, getPlatformRate, platformId, selectedCrypto]);
 
-  const platformComparisons = useMemo(() => {
-    if (!selectedCrypto || !selectedCrypto.current_price) return [];
-
-    return safeVendors.map((platform) => {
-      const numAmount = Number.parseFloat(amount) || 0;
-      const rate = platform.rate ?? 0;
-      const usdAmount = currency === "NGN" ? numAmount / rate : numAmount;
-      const cryptoAmount = usdAmount / selectedCrypto.current_price;
-      const ngnAmount = usdAmount * rate;
-      const spreadNgn = platform.name === platformId ? 0 : ngnAmount - calculations.ngn;
-
-      return {
-        ...platform,
-        usd: usdAmount,
-        crypto: cryptoAmount,
-        ngn: ngnAmount,
-        spreadNgn,
-      };
-    });
-  }, [amount, currency, safeVendors, selectedCrypto, platformId, calculations.ngn]);
-
-  // ✅ Manage error via useEffect
-  useEffect(() => {
-    const hasValidRate = selectedPlatform && selectedPlatform.rate && selectedCrypto && selectedCrypto.current_price;
-    if (!hasValidRate && (geckoCoins || vendors)) { // Only show error if data has loaded but is invalid
-      setError("Cannot perform calculations. Please ensure a valid platform and crypto are selected and rates are available.");
-    } else {
-      setError("");
-    }
-  }, [selectedPlatform, selectedCrypto, geckoCoins, vendors]);
-
-  // ✅ Retry fetch function
-  const handleRetry = async () => {
-    setError("");
-    await refetchVendors();
-  };
-  
-  // Sort results so selected platform appears first
-  const sortedPlatformComparisons = useMemo(() => {
-    if (platformComparisons.length === 0) return [];
-    const selected = platformComparisons.find((r) => r.name === platformId);
-    const others = platformComparisons.filter((r) => r.name !== platformId);
-    return selected ? [selected, ...others] : platformComparisons;
-  }, [platformComparisons, platformId]);
-
-  // ✅ Loading state
-  if (!geckoCoins || !vendors) {
+  // Loading state
+  if (!geckoCoins || ratesLoading) {
     return (
       <main className="p-6 bg-bg text-foreground">
         <h1 className="text-2xl font-bold mb-4 text-primary">Calculator</h1>
@@ -145,22 +153,6 @@ const safeVendors = useMemo<FxVendor[]>(() => {
         <h1 className="text-2xl font-bold tracking-tight text-primary ">Crypto Calculator</h1>
         <p className="text-muted-foreground mt-1">Multi-platform currency conversion</p>
       </div>
-
-      {/* Error Box */}
-      {error && (
-        <Card className="bg-destructive/10 border-destructive text-destructive-foreground">
-          <CardContent className="p-4 flex justify-between items-center">
-            <span>{error}</span>
-            <button
-              onClick={handleRetry}
-              className="ml-4 px-3 py-1 bg-destructive text-destructive-foreground font-medium rounded hover:opacity-90"
-              disabled={isValidating}
-            >
-              {isValidating ? "Retrying..." : "Retry Fetch"}
-            </button>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Controls */}
       <Card className="bg-card border-border">
@@ -193,14 +185,14 @@ const safeVendors = useMemo<FxVendor[]>(() => {
 
             <div className="space-y-2">
               <Label>Platform</Label>
-              <Select value={platformId} onValueChange={setPlatformId}>
-                <SelectTrigger className="h-12 bg-muted border-border">
+              <Select value={platformId} onValueChange={(value) => setPlatformId(value as CryptoPlatformId)}>
+                <SelectTrigger className="h-12 border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {safeVendors.map((platform) => (
-                    <SelectItem key={platform.name} value={platform.name}>
-                      {platform.name} {platform.rate ? `(₦${platform.rate.toLocaleString()})` : "(no rate)"}
+                  {CRYPTO_PLATFORMS.map((platform) => (
+                    <SelectItem key={platform.id} value={platform.id}>
+                      {platform.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -227,12 +219,12 @@ const safeVendors = useMemo<FxVendor[]>(() => {
       </Card>
 
       {/* ✅ Selected Platform Summary */}
-      {selectedPlatform && selectedCrypto && (
+      {selectedCrypto && calculations.platformRate > 0 && (
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium flex items-center gap-2">
               <Calculator className="w-5 h-5 text-primary" />
-              Selected Platform: {selectedPlatform.name}
+              {CRYPTO_PLATFORMS.find(p => p.id === platformId)?.name || "Calculator"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -256,11 +248,17 @@ const safeVendors = useMemo<FxVendor[]>(() => {
                 </p>
               </div>
             </div>
-            {selectedPlatform.updated_at && (
-              <p className="text-sm text-muted-foreground mt-4">
-                Updated: {new Date(selectedPlatform.updated_at).toLocaleString()}
-              </p>
-            )}
+            {/* Rate provenance badge per selected platform */}
+            <div className="mt-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {isUsingLive ? "Live rate" : "Last rate (DB)"}
+                </span>
+              </div>    </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              {CRYPTO_PLATFORMS.find(p => p.id === platformId)?.name} Rate: ₦{calculations.platformRate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / USD
+            </p>
           </CardContent>
         </Card>
       )}
@@ -270,7 +268,7 @@ const safeVendors = useMemo<FxVendor[]>(() => {
         <CardHeader>
           <CardTitle className="text-lg font-medium flex items-center gap-2">
             <ArrowRightLeft className="w-5 h-5" />
-            Platform Comparison
+            Platform Details
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -290,68 +288,54 @@ const safeVendors = useMemo<FxVendor[]>(() => {
                   <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
                     NGN
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
-                    Spread NGN
-                  </th>
                 </tr>
               </thead>
-            <tbody>
-              {sortedPlatformComparisons.map((r) => {
-                const isSelected = r.name === platformId;
-                return (
-                  <tr
-                    key={r.name}
-                    className={cn("hover:bg-muted/20 transition-colors", isSelected && "bg-primary/5")}
-                  >
-                    <td className="px-4 py-4">
-                      <div>
-                        <p className="font-medium">{r.name}</p>
-                        {r.rate ? (
-                          <p className="text-sm text-muted-foreground">
-                            ₦{r.rate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / $1
-                          </p>
-                        ) : (
-                          <p className="text-sm text-destructive">
-                            Rate not available
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-right font-mono text-sm">
-                      $
-                      {r.usd.toLocaleString("en-US",
-                        { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-right font-mono text-sm">
-                      {r.crypto.toFixed(6)}
-                    </td>
-                    <td className="px-4 py-4 text-right font-mono text-sm">
-                      ₦
-                      {r.ngn.toLocaleString("en-US",
-                        { minimumFractionDigits: 0, maximumFractionDigits: 0 }
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-right font-mono text-sm">
-                      <span
-                        className={cn(
-                          r.spreadNgn > 0 ? "text-green-600" :
-                          r.spreadNgn < 0 ? "text-red-600" :
-                          r.spreadNgn === 0 && "text-muted-foreground"
-                        )}
-                      >
-                        ₦
-                        {r.spreadNgn.toLocaleString("en-US", {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              <tbody>
+                {CRYPTO_PLATFORMS.map((platform) => {
+                  const numAmount = Number.parseFloat(amount) || 0;
+                  const dbRateRow = getPlatformRate(platform.id);
+                  const isSelected = platform.id === platformId;
+                  const rowLive = isSelected && typeof liveRate === "number" && liveRate > 0 ? liveRate! : 0;
+                  const platformRate = rowLive > 0 ? rowLive : dbRateRow;
+                  
+                  // Skip if no rate available for this platform
+                  if (!platformRate || platformRate === 0) {
+                    return null;
+                  }
+                  
+                  const usdAmount = currency === "NGN" ? numAmount / platformRate : numAmount;
+                  const cryptoAmount = selectedCrypto ? usdAmount / selectedCrypto.current_price : 0;
+                  const ngnAmount = usdAmount * platformRate;
+
+                  return (
+                    <tr
+                      key={platform.id}
+                      className={cn("hover:bg-muted/20 transition-colors", isSelected && "bg-primary/5")}
+                    >
+                      <td className="px-4 py-4">
+                        <p className="font-medium flex items-center gap-2">
+                          {platform.name}
+                          {rowLive > 0 ? (
+                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">Live</span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-700 border border-blue-200">Last</span>
+                          )}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-sm">
+                        ${usdAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-sm">
+                        {cryptoAmount.toFixed(6)}
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-sm">
+                        ₦{ngnAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

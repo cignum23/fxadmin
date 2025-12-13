@@ -3,8 +3,6 @@ export type FxVendorRate = { name: string; rate: number; source: string };
 
 export async function fetchLiveFxRates(): Promise<FxVendorRate[]> {
   const endpoints = [
-    { name: "AbokiFX", url: "/api/fx/abokifx" },
-    { name: "Wise", url: "/api/fx/wise" },
     { name: "WorldRemit", url: "/api/fx/worldremit" },
     { name: "Payoneer", url: "/api/fx/payoneer" },
     { name: "Skrill", url: "/api/fx/skrill" },

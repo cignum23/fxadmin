@@ -23,17 +23,12 @@ type PlatformPriceMap = {
   };
 };
 
-const currencySymbol = {
-  usd: "$",
-  ngn: "₦",
-};
-
 export default function HomePage() {
   const [currency, setCurrency] = useState<"usd" | "ngn">("usd");
 
   const { data: geckoCoins, isLoading: gLoading } = useSWR(
-    ["homepage_coins", currency],
-    () => fetchCoinGeckoPrices(currency),
+    "homepage_coins",
+    () => fetchCoinGeckoPrices("usd"),
     { refreshInterval: 30000 }
   );
 
@@ -59,7 +54,21 @@ export default function HomePage() {
     refreshInterval: 30000,
   });
 
-  // Removed unused fxRate to fix unused variable error
+  // Fetch FX rate for consistent NGN conversion
+  const { data: fxRate } = useSWR("fxRate_crypto", async () => {
+    try {
+      const res = await fetch("/api/fx/vendors");
+      const vendors = await res.json() as Array<{ name: string; rate: number }>;
+      // Prefer stablecoin rates
+      const stablecoins = vendors.filter(v => v.name.includes("USDT") || v.name.includes("USDC"));
+      if (stablecoins.length > 0) {
+        return stablecoins.reduce((sum, v) => sum + v.rate, 0) / stablecoins.length;
+      }
+      return vendors[0]?.rate || 1500;
+    } catch {
+      return 1500;
+    }
+  });
 
   const { data: ccPrices } = useSWR("cc_home", fetchCryptoComparePrices, {
     refreshInterval: 30000,
@@ -72,43 +81,40 @@ export default function HomePage() {
   const top10 = geckoCoins.slice(0, 10);
   const merged: PlatformPriceMap = {};
 
-  // Base: CoinGecko
+  // Base: CoinGecko (USD)
   for (const coin of top10) {
     const symbol = coin.symbol.toUpperCase();
     merged[symbol] = { coingecko: coin.current_price };
   }
 
-  // Merge CoinMarketCap
+  // Merge CoinMarketCap (USD only)
   if (cmcCoins) {
     for (const coin of cmcCoins) {
       const symbol = coin.symbol.toUpperCase();
       if (merged[symbol]) {
-        merged[symbol].coinmarketcap =
-          currency === "usd" ? coin.quote.USD?.price ?? undefined : coin.quote.NGN?.price ?? undefined;
+        merged[symbol].coinmarketcap = coin.quote.USD?.price ?? undefined;
       }
     }
   }
 
-  // Merge CryptoCompare
+  // Merge CryptoCompare (USD)
   if (ccPrices) {
     for (const symbol in ccPrices) {
       const entry = ccPrices[symbol];
       if (merged[symbol]) {
-        merged[symbol].cryptocompare =
-          currency === "usd" ? entry?.USD ?? undefined : entry?.NGN ?? undefined;
+        merged[symbol].cryptocompare = entry?.USD ?? undefined;
       }
     }
   }
 
-  // ✅ FIX: Merge Binance with safe fallback
+  // Merge Binance (USD)
   if (binanceData) {
     for (const symbol of Object.keys(merged)) {
       const entry = binanceData[symbol];
       if (entry) {
-        merged[symbol].binance =
-          currency === "usd" ? entry.USD ?? undefined : entry.NGN ?? undefined;
+        merged[symbol].binance = entry.USD ?? undefined;
       } else {
-        merged[symbol].binance = undefined; // fallback if missing
+        merged[symbol].binance = undefined;
       }
     }
   }
@@ -151,10 +157,11 @@ export default function HomePage() {
             <tr>
               <th className="p-2 text-left">#</th>
               <th className="p-2 text-left">Coin</th>
-              <th className="p-2 text-left">CoinGecko</th>
-              <th className="p-2 text-left">CoinMarketCap</th>
-              <th className="p-2 text-left">CryptoCompare</th>
-              <th className="p-2 text-left">Binance</th>
+              <th className="p-2 text-left">CoinGecko (USD)</th>
+              <th className="p-2 text-left">CoinGecko (NGN)</th>
+              <th className="p-2 text-left">CoinMarketCap (USD)</th>
+              <th className="p-2 text-left">CoinMarketCap (NGN)</th>
+              <th className="p-2 text-left">Binance (USD)</th>
               <th className="p-2 text-left">% 24h</th>
             </tr>
           </thead>
@@ -178,22 +185,27 @@ export default function HomePage() {
                   </td>
                   <td className="p-2">
                     {priceSources?.coingecko
-                      ? `${currencySymbol[currency]}${priceSources.coingecko.toLocaleString()}`
+                      ? `$${priceSources.coingecko.toLocaleString()}`
+                      : "N/A"}
+                  </td>
+                  <td className="p-2">
+                    {priceSources?.coingecko && fxRate
+                      ? `₦${Math.round(priceSources.coingecko * fxRate).toLocaleString()}`
                       : "N/A"}
                   </td>
                   <td className="p-2">
                     {priceSources?.coinmarketcap
-                      ? `${currencySymbol[currency]}${priceSources.coinmarketcap.toLocaleString()}`
+                      ? `$${priceSources.coinmarketcap.toLocaleString()}`
                       : "N/A"}
                   </td>
                   <td className="p-2">
-                    {priceSources?.cryptocompare
-                      ? `${currencySymbol[currency]}${priceSources.cryptocompare.toLocaleString()}`
+                    {priceSources?.coinmarketcap && fxRate
+                      ? `₦${Math.round(priceSources.coinmarketcap * fxRate).toLocaleString()}`
                       : "N/A"}
                   </td>
                   <td className="p-2">
                     {priceSources?.binance
-                      ? `${currencySymbol[currency]}${priceSources.binance.toLocaleString()}`
+                      ? `$${priceSources.binance.toLocaleString()}`
                       : "N/A"}
                   </td>
                   <td
@@ -213,12 +225,12 @@ export default function HomePage() {
       </div>
 
       <div className="mt-4 text-right">
-        <Link
+        {/* <Link
           href="/platforms/coingecko"
           className="text-blue-600 hover:underline text-sm"
         >
           View full market →
-        </Link>
+        </Link> */}
       </div>
     </main>
   );

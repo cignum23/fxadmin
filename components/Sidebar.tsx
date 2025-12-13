@@ -126,6 +126,7 @@ import {
   CircleDollarSign,
   Calculator,
   LayoutDashboard,
+  Settings,
 } from "lucide-react"
 
 const navItems = [
@@ -135,6 +136,7 @@ const navItems = [
   { href: "/dashboard/cryptocompare", label: "CryptoCompare", icon: GitCompare },
   { href: "/dashboard/binance", label: "Binance", icon: Landmark },
   { href: "/dashboard/calculator", label: "Calculator", icon: Calculator },
+  { href: "/dashboard/management", label: "Rate Management", icon: Settings },
 ]
 
 interface SidebarProps {

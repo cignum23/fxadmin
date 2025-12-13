@@ -1,40 +1,20 @@
 // //app\dashboard\cryptocompare\page.tsx
-// import { fetchCryptoComparePrices } from "@/lib/api";
 
-// export default async function CryptoComparePage() {
-//   const prices = await fetchCryptoComparePrices();
+"use client";
 
-//   return (
-//     <div>
-//       <h2 className="text-2xl font-bold mb-4">CryptoCompare Prices</h2>
-//       <table className="w-full bg-white shadow-md rounded-lg">
-//         <thead className="bg-gray-100">
-//           <tr>
-//             <th className="p-2 text-left">Coin</th>
-//             <th className="p-2 text-left">USD</th>
-//             <th className="p-2 text-left">NGN</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {Object.entries(prices).map(([coin, data]: [string, { USD: number; NGN: number }]) => (
-//             <tr key={coin} className="border-t">
-//               <td className="p-2">{coin}</td>
-//               <td className="p-2">${data.USD.toLocaleString()}</td>
-//               <td className="p-2">₦{data.NGN.toLocaleString()}</td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-//     </div>
-//   );
-// }
-
-
+import useSWR from "swr";
 import { fetchCryptoComparePrices } from "@/lib/api";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 
-export default async function CryptoComparePage() {
-  const prices = await fetchCryptoComparePrices();
+export default function CryptoComparePage() {
+  const { data: prices, isLoading, error } = useSWR(
+    "cryptocompare",
+    fetchCryptoComparePrices,
+    { refreshInterval: 30000 }
+  );
+
+  if (isLoading) return <p className="text-muted-foreground">Loading...</p>;
+  if (error) return <p className="text-destructive">Failed to load CryptoCompare data.</p>;
 
   return (
     <div className="space-y-6">
@@ -65,7 +45,7 @@ export default async function CryptoComparePage() {
               </thead>
 
               <tbody>
-                {Object.entries(prices).map(
+                {prices && Object.entries(prices).map(
                   ([coin, data]: [string, { USD: number; NGN: number }]) => (
                     <tr key={coin} className="border-b border-border/20 hover:bg-muted/20">
                       <td className="px-4 py-4">{coin}</td>
