@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { CRYPTO_PLATFORMS } from "@/lib/constants/cryptoPlatforms";
 
+interface PlatformRate {
+  id: string;
+  platform_id: string;
+  platform_name: string;
+  rate_usd: number;
+  updated_at: string;
+  created_at: string;
+}
+
 /**
  * GET /api/fx/platform-rates
  * Fetch all platform rates from database
@@ -110,7 +119,7 @@ export async function GET() {
     // If some required platforms are missing, backfill them with the shared FX rate
     if (data && data.length > 0) {
       const requiredIds = new Set(CRYPTO_PLATFORMS.map((p) => p.id));
-      const existingIds = new Set<string>(data.map((r: any) => r.platform_id));
+     const existingIds = new Set<string>(data.map((r: PlatformRate) => r.platform_id));
       const missing = [...requiredIds].filter((id) => !existingIds.has(id));
       if (missing.length > 0) {
         const sharedFxRate = await computeSharedFxRate();

@@ -35,10 +35,8 @@ export default function CalculatorPage() {
     { refreshInterval: 30000 }
   );
 
-  interface Vendor {
-    name: string;
-    rate: number;
-  }
+  // Vendor shape (used internally when needed)
+  // Removed export to avoid unused type warning
 
   interface CoinMarketCapCoin {
     name: string;
@@ -134,7 +132,7 @@ export default function CalculatorPage() {
       ngn: ngnAmount,
       platformRate,
     };
-  }, [amount, currency, getPlatformRate, platformId, selectedCrypto]);
+  }, [amount, currency, getPlatformRate, platformId, selectedCrypto, isUsingLive, liveRate]);
 
   // Loading state
   if (!geckoCoins || ratesLoading) {
