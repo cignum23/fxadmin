@@ -3,6 +3,7 @@ export type CryptoPlatformId =
   | "coinmarketcap"
   | "cryptocompare"
   | "binance"
+  | "abokifx"
   | "internal";
 
 export const CRYPTO_PLATFORMS: {
@@ -13,5 +14,6 @@ export const CRYPTO_PLATFORMS: {
   { id: "coinmarketcap", name: "CoinMarketCap" },
   { id: "cryptocompare", name: "CryptoCompare" },
   { id: "binance", name: "Binance" },
+  { id: "abokifx", name: "Aboki FX" },
   { id: "internal", name: "Internal Engine" },
 ];

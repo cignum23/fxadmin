@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 export default function CalculatorPage() {
   // State management
-  const [amount, setAmount] = useState<string>("100");
+  const [amount, setAmount] = useState<string>("1");
   const [currency, setCurrency] = useState<"USD" | "NGN">("USD");
   const [platformId, setPlatformId] = useState<CryptoPlatformId>("coingecko");
   const [selectedCoinSymbol, setSelectedCoinSymbol] = useState<string>("BTC");
@@ -45,6 +45,19 @@ export default function CalculatorPage() {
         price?: number;
       };
     };
+  }
+
+  interface AbokiFxApiResponse {
+    rate?: number | null;
+    mid_rate?: number | null;
+    buy_rate?: number | null;
+    sell_rate?: number | null;
+    currency?: string | null;
+    endpoint?: string | null;
+    timestamp?: string | null;
+    source?: string | null;
+    updated_at?: string | null;
+    raw_rate?: string | null;
   }
 
   // Per-platform live FX rate fetchers (USD->NGN)
@@ -86,12 +99,35 @@ export default function CalculatorPage() {
         const btcUsd = btc?.quote?.USD?.price;
         if (btcNgn && btcUsd && btcUsd > 0) return Math.round((btcNgn / btcUsd) * 100) / 100;
         return 0;
+      } else if (platform === "abokifx") {
+        // Aboki website shows a single USD/NGN figure; use the API's buy side by default.
+        const res = await fetch("/api/fx/abokifx?mode=buy", { cache: "no-store" });
+        if (!res.ok) return 0;
+        const data = (await res.json()) as AbokiFxApiResponse;
+        const rate = Number(data?.rate ?? data?.buy_rate ?? data?.mid_rate);
+        if (Number.isFinite(rate) && rate > 0) return Math.round(rate * 100) / 100;
+        return 0;
       }
       return 0;
     } catch {
       return 0;
     }
   }
+
+  // Aboki details (buy/sell/mid) for UI when selected
+  const { data: abokiDetails } = useSWR<AbokiFxApiResponse | null>(
+    platformId === "abokifx" ? ["aboki-details"] : null,
+    async () => {
+      try {
+        const res = await fetch("/api/fx/abokifx?mode=buy", { cache: "no-store" });
+        if (!res.ok) return null;
+        return (await res.json()) as AbokiFxApiResponse;
+      } catch {
+        return null;
+      }
+    },
+    { refreshInterval: 30000 }
+  );
 
   // Live rate for currently selected platform
   const { data: liveRate } = useSWR<number>(
@@ -255,8 +291,31 @@ export default function CalculatorPage() {
                 </span>
               </div>    </div>
             <p className="text-sm text-muted-foreground mt-4">
-              {CRYPTO_PLATFORMS.find(p => p.id === platformId)?.name} Rate: ₦{calculations.platformRate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / USD
+              {CRYPTO_PLATFORMS.find(p => p.id === platformId)?.name} Rate: ₦{calculations.platformRate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: platformId === "abokifx" ? 4 : 2 })} / USD
             </p>
+
+            {platformId === "abokifx" && abokiDetails && (abokiDetails.buy_rate || abokiDetails.sell_rate) && (
+              <div className="mt-4 grid gap-2 md:grid-cols-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Buy</p>
+                  <p className="font-mono text-sm">₦{Number(abokiDetails.buy_rate).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Sell</p>
+                  <p className="font-mono text-sm">₦{Number(abokiDetails.sell_rate).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Mid</p>
+                  <p className="font-mono text-sm">₦{Number(abokiDetails.mid_rate ?? abokiDetails.rate ?? 0).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
+                </div>
+              </div>
+            )}
+
+            {platformId === "abokifx" && abokiDetails?.source && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Source: {String(abokiDetails.source)}
+              </p>
+            )}
           </CardContent>
         </Card>
       )}

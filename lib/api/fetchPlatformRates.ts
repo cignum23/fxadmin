@@ -17,6 +17,38 @@ export interface PlatformRate {
 }
 
 /**
+ * Fetch USD/NGN rate from AbokiFX
+ * Uses Aboki as a direct FX source (can use ABOKI_FX_API_KEY server-side).
+ */
+async function fetchAbokiFxRate(fxRate: number): Promise<PlatformRate> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const res = await axios.get(`${baseUrl}/api/fx/abokifx`, { timeout: 5000 });
+    const rate = Number(res.data?.rate);
+    if (!rate || !Number.isFinite(rate) || rate <= 0) {
+      throw new Error("AbokiFX rate unavailable");
+    }
+
+    return {
+      platform_id: "abokifx",
+      platform_name: "Aboki FX",
+      usd_ngn_rate: Math.round(rate * 100) / 100,
+      timestamp: new Date().toISOString(),
+      success: true,
+    };
+  } catch (error) {
+    return {
+      platform_id: "abokifx",
+      platform_name: "Aboki FX",
+      usd_ngn_rate: fxRate > 0 ? fxRate : 0,
+      timestamp: new Date().toISOString(),
+      success: fxRate > 0,
+      error: error instanceof Error ? error.message : "Using fallback FX rate",
+    };
+  }
+}
+
+/**
  * Fetch USD/NGN rate from CoinGecko
  * CoinGecko natively supports NGN, so we calculate the rate directly
  */
@@ -206,6 +238,7 @@ export async function fetchAllPlatformRates(sharedFxRate: number): Promise<Platf
     fetchCoinMarketCapRate(sharedFxRate),
     fetchCryptoCompareRate(sharedFxRate),
     fetchBinanceRate(sharedFxRate),
+    fetchAbokiFxRate(sharedFxRate),
   ]);
 
   return results
