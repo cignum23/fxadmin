@@ -76,7 +76,7 @@ export default function HomePage() {
 
   const isLoading = gLoading || !geckoCoins;
   if (isLoading) return <p>Loading top cryptocurrencies...</p>;
-  if (!geckoCoins) return <p className="text-red-600">Failed to load data.</p>;
+  if (!geckoCoins) return <p className="text-danger">Failed to load data.</p>;
 
   const top10 = geckoCoins.slice(0, 10);
   const merged: PlatformPriceMap = {};
@@ -120,22 +120,24 @@ export default function HomePage() {
   }
 
   return (
-    <main className="p-6 text-gray-950 bg-[#e5e5e6] space-y-6">
+    <main className="p-6 bg-background text-foreground space-y-6 rounded-xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Market Overview</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Market Overview</h1>
+          <p className="text-mutedForeground mt-1">
             Compare prices across major exchanges
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-card rounded-xl p-1 border border-border">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setCurrency('usd')}
             className={cn( 
-              'rounded-lg px-4',
-              currency === 'usd' && 'bg-primary text-primary-foreground hover:bg-primary'
+              "rounded-md px-4 text-sm transition",
+              currency === "usd"
+                ? "bg-primary text-primaryForeground"
+                : "text-mutedForeground hover:text-foreground"
             )}
           >
             USD
@@ -144,7 +146,12 @@ export default function HomePage() {
             variant="ghost"
             size="sm"
             onClick={() => setCurrency('ngn')}
-            className={cn('rounded-lg px-4', currency === 'ngn' && 'bg-primary text-primary-foreground hover:bg-primary')}
+            className={cn(
+              "rounded-md px-4 text-sm transition",
+              currency === "ngn"
+                ? "bg-primary text-primaryForeground"
+                : "text-mutedForeground hover:text-foreground"
+            )}
           >
             NGN
           </Button>
@@ -152,17 +159,17 @@ export default function HomePage() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg">
-          <thead className="bg-gray-100 text-sm">
+        <table className="min-w-full bg-card shadow-card rounded-xl overflow-hidden border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
+          <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
             <tr>
-              <th className="p-2 text-left">#</th>
-              <th className="p-2 text-left">Coin</th>
-              <th className="p-2 text-left">CoinGecko (USD)</th>
-              <th className="p-2 text-left">CoinGecko (NGN)</th>
-              <th className="p-2 text-left">CoinMarketCap (USD)</th>
-              <th className="p-2 text-left">CoinMarketCap (NGN)</th>
-              <th className="p-2 text-left">Binance (USD)</th>
-              <th className="p-2 text-left">% 24h</th>
+              <th className="p-3 font-medium text-left">#</th>
+              <th className="p-3 font-medium text-left">Coin</th>
+              <th className="p-3 font-medium text-left">CoinGecko (USD)</th>
+              <th className="p-3 font-medium text-left">CoinGecko (NGN)</th>
+              <th className="p-3 font-medium text-left">CoinMarketCap (USD)</th>
+              <th className="p-3 font-medium text-left">CoinMarketCap (NGN)</th>
+              <th className="p-3 font-medium text-left">Binance (USD)</th>
+              <th className="p-3 font-medium text-left">% 24h</th>
             </tr>
           </thead>
           <tbody>
@@ -171,49 +178,51 @@ export default function HomePage() {
               const priceSources = merged[symbol];
 
               return (
-                <tr key={coin.id} className="border-t text-sm hover:bg-gray-50">
-                  <td className="p-2">{coin.market_cap_rank}</td>
-                  <td className="p-2 flex items-center gap-2">
+                <tr
+                  key={coin.id}
+                  className="text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]"
+                >
+                  <td className="p-3">{coin.market_cap_rank}</td>
+                  <td className="p-3 flex items-center gap-3">
                     <Image
                       src={coin.image}
                       alt={coin.name}
                       width={20}
                       height={20}
-                      className="rounded-full"
+                      className="rounded-full bg-muted p-0.5"
                     />
                     {coin.name} ({symbol})
                   </td>
-                  <td className="p-2">
+                  <td className="p-3 text-foreground font-medium">
                     {priceSources?.coingecko
                       ? `$${priceSources.coingecko.toLocaleString()}`
                       : "N/A"}
                   </td>
-                  <td className="p-2">
+                  <td className="p-3 text-foreground font-medium">
                     {priceSources?.coingecko && fxRate
                       ? `₦${Math.round(priceSources.coingecko * fxRate).toLocaleString()}`
                       : "N/A"}
                   </td>
-                  <td className="p-2">
+                  <td className="p-3 text-foreground font-medium">
                     {priceSources?.coinmarketcap
                       ? `$${priceSources.coinmarketcap.toLocaleString()}`
                       : "N/A"}
                   </td>
-                  <td className="p-2">
+                  <td className="p-3 text-foreground font-medium">
                     {priceSources?.coinmarketcap && fxRate
                       ? `₦${Math.round(priceSources.coinmarketcap * fxRate).toLocaleString()}`
                       : "N/A"}
                   </td>
-                  <td className="p-2">
+                  <td className="p-3 text-foreground font-medium">
                     {priceSources?.binance
                       ? `$${priceSources.binance.toLocaleString()}`
                       : "N/A"}
                   </td>
                   <td
-                    className={`p-2 ${
-                      coin.price_change_percentage_24h >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
+                    className={cn(
+                      "p-3 font-semibold",
+                      coin.price_change_percentage_24h >= 0 ? "text-success" : "text-danger"
+                    )}
                   >
                     {coin.price_change_percentage_24h?.toFixed(2)}%
                   </td>

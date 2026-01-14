@@ -24,18 +24,18 @@ export default function DashboardPage() {
   if (isLoading || !isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-background">
       {/* Navigation Tabs */}
-      <div className="sticky top-0 bg-white border-b border-slate-200 shadow-sm z-10">
+      <div className="sticky top-0 bg-card border-b border-gray-600 shadow-card z-10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-8">
             <button
               onClick={() => setActiveView('rates')}
               className={`px-4 py-4 font-medium border-b-2 transition-colors ${
                 activeView === 'rates'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`} 
             >
               FX Rate Engine
             </button>
@@ -43,8 +43,8 @@ export default function DashboardPage() {
               onClick={() => setActiveView('crypto')}
               className={`px-4 py-4 font-medium border-b-2 transition-colors ${
                 activeView === 'crypto'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               Crypto Prices

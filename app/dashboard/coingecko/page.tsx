@@ -60,50 +60,53 @@ export default function CoinGeckoPage() {
           <CardTitle>Top 100 Coins</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+          <div className="overflow-x-auto rounded-xl border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
+            <table className="min-w-full bg-card text-sm text-foreground">
+              <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
                 <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     #
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     Coin
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     Price (USD)
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     Price (NGN)
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     24h %
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {coins.map((coin: CoinGeckoMarketCoin) => (
-                  <tr key={coin.id} className="border-b border-border/30 hover:bg-muted/20">
-                    <td className="px-4 py-4">{coin.market_cap_rank}</td>
-                    <td className="px-4 py-4 flex items-center gap-2">
+                  <tr
+                    key={coin.id}
+                    className="text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]"
+                  >
+                    <td className="p-3">{coin.market_cap_rank}</td>
+                    <td className="p-3 flex items-center gap-3">
                       <Image
                         src={coin.image}
                         alt={coin.name}
                         width={20}
                         height={20}
-                        className="rounded-full"
+                        className="rounded-full bg-muted p-0.5"
                       />
                       {coin.name} ({coin.symbol.toUpperCase()})
                     </td>
-                    <td className="px-4 py-4">
+                    <td className="p-3 text-foreground font-medium">
                       ${coin.current_price.toLocaleString()}
                     </td>
-                    <td className="px-4 py-4">
+                    <td className="p-3 text-foreground font-medium">
                       {fxRate ? `₦${Math.round(coin.current_price * fxRate).toLocaleString()}` : "Loading..."}
                     </td>
                     <td
                       className={cn(
-                        "px-4 py-4",
+                        "p-3 font-semibold",
                         coin.price_change_percentage_24h >= 0
                           ? "text-success"
                           : "text-danger"

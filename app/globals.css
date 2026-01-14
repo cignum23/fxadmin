@@ -8,32 +8,66 @@
   --background: var(--color-bg);
   --foreground: var(--color-foreground);
 
+  /* Aliases used by existing Tailwind classes */
+  --bg: var(--color-bg);
+  --surface: var(--color-surface);
+
+  /* Secondary (Navy) */
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+
   /* Primary Brand */
   --primary: var(--color-primary);
-  --primary-foreground: #ffffff;
+  --primary-foreground: var(--color-primary-foreground);
 
   /* Accent */
   --accent: var(--color-accent);
-  --accent-foreground: #000000;
+  --accent-foreground: var(--color-accent-foreground);
 
   /* Support */
   --muted: var(--color-muted);
   --muted-foreground: var(--color-muted-foreground, #cbd5e1);
 
+  /* Inputs + Rings (shadcn/ui tokens) */
+  --input: var(--color-border);
+  --ring: var(--color-ring);
+
   /* Status */
   --success: var(--color-success);
   --danger: var(--color-danger);
 
+  /* shadcn/ui destructive alias */
+  --destructive: var(--color-danger);
+  --destructive-foreground: var(--color-danger-foreground);
+
+  /* Warning */
+  --warning: var(--color-warning);
+
   /* Card System */
   --card: var(--color-surface);
   --card-foreground: var(--color-foreground);
-  --card-header: rgba(255,255,255,0.02);        /* subtle topbar */
-  --card-border: var(--color-muted);
-  --shadow-card: 0px 2px 14px rgba(0,0,0,0.20);
-  --shadow-card-hover: 0px 4px 22px rgba(0,0,0,0.28);
+  --card-header: var(--header);
+  --card-border: var(--color-border);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover: 0 12px 34px rgba(0, 0, 0, 0.30);
+
+  /* Popover (shadcn/ui) */
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-foreground);
+
+  /* Market Overview tokens */
+  --header: var(--color-header);
+  --cardHover: var(--color-card-hover);
+
+  /* Sidebar */
+  --sidebar: var(--color-sidebar);
+  --sidebar-foreground: var(--color-sidebar-foreground);
+  --sidebar-border: var(--color-sidebar-border);
+  --sidebar-accent: var(--color-sidebar-accent);
+  --sidebar-primary: var(--color-sidebar-primary);
 
   /* Border */
-  --border: var(--color-muted);
+  --border: var(--color-border);
 
   /* Radius */
   --radius: 12px;
@@ -43,40 +77,92 @@
    DARK MODE (DEFAULT)
    =========================================== */
 :root {
-  --color-bg: #0f1724;
-  --color-surface: #0b1220;
-  --color-foreground: #e6eef8;
-  --color-muted: #94a3b8;
-  --color-muted-foreground: #b8c3d6;
+  /* ==========================================
+     MARKET OVERVIEW THEME (DEFAULT)
+     Matches the requested pixel-for-pixel spec
+     ========================================== */
+  --color-bg: #062b4f;                 /* background */
+  --color-surface: #0b3a5d;            /* card */
+  --color-card-hover: #0f466e;         /* cardHover */
+  --color-header: #083357;             /* header */
 
-  --color-primary: #155dfc;
-  --color-accent: #EFBF04;
+  --color-border: #bda1569d; /* gray-600 separators */
 
-  --color-success: #16a34a;
+  --color-foreground: #4b5563;         /* foreground */
+  --color-muted: #0a3557;              /* muted */
+  --color-muted-foreground: #9fb7cc;   /* mutedForeground */
+
+  /* Brand anchors */
+  --color-primary: #bda156;            /* gold */
+  --color-primary-foreground: #0b3a5d;
+
+  --color-secondary: #002e56;          /* deep blue */
+  --color-secondary-foreground: #4b5563;
+
+  --color-accent: #bda156;             /* gold */
+  --color-accent-foreground: #0b3a5d;
+
+  /* Status */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
   --color-danger: #ef4444;
+  --color-danger-foreground: #0b3a5d;
 
-  --card-header: rgba(255, 255, 255, 0.04);
+  --color-ring: #bda156;
+
+  /* Sidebar (keep cohesive with the dark theme) */
+  --color-sidebar: #083357;
+  --color-sidebar-foreground: #4b5563;
+  --color-sidebar-border: #4b5563;
+  --color-sidebar-accent: #4b5563;
+  --color-sidebar-primary: #bda156;
+
+  /* Chart palette */
+  --chart-fx-buy: #22c55e;
+  --chart-fx-sell: #ef4444;
+  --chart-neutral: #9fb7cc;
+  --chart-usd-fiat: #bda156;
+  --chart-crypto: #e6f1fa;
 }
 
 /* ===========================================
    LIGHT MODE
    =========================================== */
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #f7fafc;
-    --color-surface: #ffffff;
-    --color-foreground: #0f1724;
+    /* Keep the same Market Overview theme even in dark mode */
+    --color-bg: #062b4f;
+    --color-surface: #0b3a5d;
+    --color-card-hover: #0f466e;
+    --color-header: #083357;
 
-    --color-muted: #475569;
-    --color-muted-foreground: #64748b;
+    --color-border: #ffc320b0;
 
-    --color-primary: #7F2E7D;
-    --color-accent: #EFBF04;
+    --color-foreground: #faefe6; /* text color */
+    --color-muted: #0a3557;
+    --color-muted-foreground: #9fb7cc;
 
-    --color-success: #16a34a;
+    --color-primary: #bda156;
+    --color-primary-foreground: #0b3a5d;
+
+    --color-secondary: #002e56;
+    --color-secondary-foreground: #e6f1fa;
+
+    --color-accent: #bda156;
+    --color-accent-foreground: #0b3a5d;
+
+    --color-success: #22c55e;
+    --color-warning: #f59e0b;
     --color-danger: #ef4444;
+    --color-danger-foreground: #0b3a5d;
 
-    --card-header: rgba(0, 0, 0, 0.03);
+    --color-ring: #bda156;
+
+    --color-sidebar: #083357;
+    --color-sidebar-foreground: #e6f1fa;
+    --color-sidebar-border: #4b5563;
+    --color-sidebar-accent: #4b5563;
+    --color-sidebar-primary: #bda156;
   }
 }
 
@@ -84,7 +170,11 @@
    GLOBAL DEFAULTS
    =========================================== */
 body {
-  background-color: var(--background);
+  /* Premium background depth (keeps within deep blue + gold language) */
+  background:
+    radial-gradient(1200px circle at 20% -10%, rgba(0, 46, 86, 0.55), transparent 55%),
+    radial-gradient(900px circle at 85% 0%, rgba(189, 161, 86, 0.20), transparent 58%),
+    linear-gradient(180deg, #062b4f 0%, #002e56 40%, #062b4f 100%);
   color: var(--foreground);
   font-family: var(--font-sans, Inter, ui-sans-serif, system-ui);
   margin: 0;
@@ -124,8 +214,8 @@ select {
 .row-selected {
   background: linear-gradient(
     90deg,
-    rgba(127, 46, 125, 0.15),
-    rgba(239, 191, 4, 0.05)
+    rgba(0, 46, 86, 0.10),
+    rgba(189, 161, 86, 0.08)
   );
   border-left: 4px solid var(--primary);
 }

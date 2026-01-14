@@ -17,12 +17,12 @@ interface RateChartProps {
 export default function RateChart({ data }: RateChartProps) {
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+      <h3 className="text-lg font-semibold text-foreground mb-4">
         Rate History (Last 24 Hours)
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
           <XAxis
             dataKey="timestamp"
             tick={{ fontSize: 12 }}
@@ -39,8 +39,8 @@ export default function RateChart({ data }: RateChartProps) {
               return [String(value), ''];
             }}
             contentStyle={{
-              backgroundColor: '#fff',
-              border: '1px solid #ccc',
+              backgroundColor: 'var(--popover)',
+              border: '1px solid var(--border)',
               borderRadius: '8px'
             }}
           />
@@ -48,7 +48,7 @@ export default function RateChart({ data }: RateChartProps) {
           <Line
             type="monotone"
             dataKey="final_usd_ngn_rate"
-            stroke="#2563eb"
+            stroke="#002E56"
             dot={false}
             name="Final Rate"
             strokeWidth={2}
@@ -56,7 +56,7 @@ export default function RateChart({ data }: RateChartProps) {
           <Line
             type="monotone"
             dataKey="baseline_rate"
-            stroke="#64748b"
+            stroke="#BDA156"
             dot={false}
             name="Baseline"
             strokeWidth={1}

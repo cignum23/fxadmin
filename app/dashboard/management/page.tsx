@@ -18,20 +18,20 @@ export default function ManagementPage() {
   if (isLoading || !isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
+      <div className="bg-card border-b border-border shadow-card">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Rate Management</h1>
-              <p className="text-gray-600 mt-2">
+              <h1 className="text-3xl font-bold text-foreground">Rate Management</h1>
+              <p className="text-muted-foreground mt-2">
                 Update crypto rates and OTC desk configuration
               </p>
             </div>
             <button
               onClick={() => router.back()}
-              className="text-gray-600 hover:text-gray-900 font-medium"
+              className="text-muted-foreground hover:text-foreground font-medium"
             >
               ← Back
             </button>

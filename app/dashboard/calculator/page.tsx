@@ -254,7 +254,7 @@ export default function CalculatorPage() {
 
       {/* ✅ Selected Platform Summary */}
       {selectedCrypto && calculations.platformRate > 0 && (
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+        <Card className="bg-linear-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium flex items-center gap-2">
               <Calculator className="w-5 h-5 text-primary" />
@@ -329,20 +329,20 @@ export default function CalculatorPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+          <div className="overflow-x-auto rounded-xl border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
+            <table className="min-w-full bg-card text-sm text-foreground">
+              <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
                 <tr className="border-b border-border">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="p-3 font-medium text-left">
                     Platform
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="p-3 font-medium text-right">
                     USD
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="p-3 font-medium text-right">
                     Crypto ({selectedCrypto?.symbol || "N/A"})
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="p-3 font-medium text-right">
                     NGN
                   </th>
                 </tr>
@@ -367,25 +367,28 @@ export default function CalculatorPage() {
                   return (
                     <tr
                       key={platform.id}
-                      className={cn("hover:bg-muted/20 transition-colors", isSelected && "bg-primary/5")}
+                      className={cn(
+                        "text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]",
+                        isSelected && "bg-primary/5"
+                      )}
                     >
-                      <td className="px-4 py-4">
+                      <td className="p-3">
                         <p className="font-medium flex items-center gap-2">
                           {platform.name}
                           {rowLive > 0 ? (
                             <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">Live</span>
                           ) : (
-                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-700 border border-blue-200">Last</span>
+                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-accent/25 text-accent-foreground border border-accent/40">Last</span>
                           )}
                         </p>
                       </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm">
+                      <td className="p-3 text-right font-mono text-sm text-foreground font-medium">
                         ${usdAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm">
+                      <td className="p-3 text-right font-mono text-sm text-foreground font-medium">
                         {cryptoAmount.toFixed(6)}
                       </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm">
+                      <td className="p-3 text-right font-mono text-sm text-foreground font-medium">
                         ₦{ngnAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </td>
                     </tr>

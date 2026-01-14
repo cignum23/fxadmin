@@ -231,62 +231,62 @@ export function RateManagement() {
       <div className="space-y-6">
         {/* Current Internal Crypto Rates */}
         {baselineRateInfo && (
-          <Card className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-l-4 border-emerald-600">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Current Internal Crypto Rates</h3>
+            <Card className="p-6 bg-primary/5 border-l-4 border-primary">
+              <h3 className="text-sm font-semibold text-foreground mb-4">Current Internal Crypto Rates</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {baselineRateInfo.usdt_ngn_buy && (
-                <div className="bg-white rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">USDT/NGN Buy Rate</p>
-                  <p className="text-2xl font-bold text-emerald-600">₦{baselineRateInfo.usdt_ngn_buy.toFixed(2)}</p>
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <p className="text-xs text-muted-foreground mb-1">USDT/NGN Buy Rate</p>
+                    <p className="text-2xl font-bold text-primary">₦{baselineRateInfo.usdt_ngn_buy.toFixed(2)}</p>
                 </div>
               )}
               {baselineRateInfo.usdt_ngn_sell && (
-                <div className="bg-white rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">USDT/NGN Sell Rate</p>
-                  <p className="text-2xl font-bold text-emerald-600">₦{baselineRateInfo.usdt_ngn_sell.toFixed(2)}</p>
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <p className="text-xs text-muted-foreground mb-1">USDT/NGN Sell Rate</p>
+                    <p className="text-2xl font-bold text-primary">₦{baselineRateInfo.usdt_ngn_sell.toFixed(2)}</p>
                 </div>
               )}
               {baselineRateInfo.usdt_usd_rate && (
-                <div className="bg-white rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">USDT/USD Rate</p>
-                  <p className="text-2xl font-bold text-emerald-600">${baselineRateInfo.usdt_usd_rate.toFixed(4)}</p>
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <p className="text-xs text-muted-foreground mb-1">USDT/USD Rate</p>
+                    <p className="text-2xl font-bold text-primary">${baselineRateInfo.usdt_usd_rate.toFixed(4)}</p>
                 </div>
               )}
               {baselineRateInfo.btc_usdt_price && (
-                <div className="bg-white rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">BTC/USDT Price</p>
-                  <p className="text-2xl font-bold text-emerald-600">${baselineRateInfo.btc_usdt_price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <p className="text-xs text-muted-foreground mb-1">BTC/USDT Price</p>
+                    <p className="text-2xl font-bold text-primary">${baselineRateInfo.btc_usdt_price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
                 </div>
               )}
               {baselineRateInfo.btc_ngn_price && (
-                <div className="bg-white rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">BTC/NGN Price</p>
-                  <p className="text-2xl font-bold text-emerald-600">₦{baselineRateInfo.btc_ngn_price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <p className="text-xs text-muted-foreground mb-1">BTC/NGN Price</p>
+                    <p className="text-2xl font-bold text-primary">₦{baselineRateInfo.btc_ngn_price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-500 pt-4 border-t border-emerald-200">
+              <p className="text-xs text-muted-foreground pt-4 border-t border-border">
               Last updated: {new Date(baselineRateInfo.timestamp).toLocaleString()}
             </p>
           </Card>
         )}
 
       {/* API Keys Display */}
-      <Card className="p-6 bg-gradient-to-r from-purple-50 to-pink-50">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">Internal API Keys</h3>
+      <Card className="p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-4">Internal API Keys</h3>
         <div className="space-y-3">
           {internalApiKeys.length === 0 ? (
-            <p className="text-sm text-gray-600">No API keys configured</p>
+            <p className="text-sm text-muted-foreground">No API keys configured</p>
           ) : (
             internalApiKeys.map((key, index) => (
-              <div key={index} className="flex items-center justify-between gap-2 p-3 bg-white border border-gray-200 rounded-lg">
+              <div key={index} className="flex items-center justify-between gap-2 p-3 bg-card border border-border rounded-lg">
                 <div className="flex-1">
-                  <p className="text-xs text-gray-600 mb-1">Key {index + 1}</p>
-                  <code className="text-sm text-gray-800 font-mono break-all">{maskKey(key)}</code>
+                  <p className="text-xs text-muted-foreground mb-1">Key {index + 1}</p>
+                  <code className="text-sm text-foreground font-mono break-all">{maskKey(key)}</code>
                 </div>
                 <button
                   onClick={() => copyToClipboard(key, index)}
-                  className="flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex-shrink-0"
+                  className="flex items-center gap-1 px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors shrink-0"
                 >
                   {copiedIndex === index ? (
                     <>
@@ -304,12 +304,12 @@ export function RateManagement() {
             ))
           )}
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <label className="block text-xs font-semibold text-gray-700 mb-2">Select API Key to Use</label>
+        <div className="mt-4 pt-4 border-t border-border">
+          <label className="block text-xs font-semibold text-foreground mb-2">Select API Key to Use</label>
           <select
             value={selectedKeyIndex}
             onChange={(e) => setSelectedKeyIndex(parseInt(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
+            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {internalApiKeys.map((_, index) => (
               <option key={index} value={index}>
@@ -322,21 +322,21 @@ export function RateManagement() {
 
       {/* Message Alert */}
       {message && (
-        <Card className={`p-4 ${message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-          <p className={message.type === 'success' ? 'text-green-700' : 'text-red-700'}>
+        <Card className={`p-4 ${message.type === 'success' ? 'bg-success/10 border border-success/20' : 'bg-danger/10 border border-danger/20'}`}>
+          <p className={message.type === 'success' ? 'text-success' : 'text-danger'}>
             {message.text}
           </p>
         </Card>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-gray-200">
+      <div className="flex gap-4 border-b border-border">
         <button
           onClick={() => setActiveTab('crypto')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeTab === 'crypto'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           Crypto Rates
@@ -345,8 +345,8 @@ export function RateManagement() {
           onClick={() => setActiveTab('otc')}
           className={`px-4 py-2 font-medium border-b-2 transition-colors ${
             activeTab === 'otc'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           OTC Desk
@@ -356,11 +356,11 @@ export function RateManagement() {
       {/* Crypto Rates Form */}
       {activeTab === 'crypto' && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Update Internal Crypto Rates</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-6">Update Internal Crypto Rates</h3>
           <form onSubmit={handleCryptoSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   USDT/NGN Sell Rate
                 </label>
                 <input
@@ -371,12 +371,12 @@ export function RateManagement() {
                   onChange={(e) =>
                     setCryptoForm({ ...cryptoForm, usdt_ngn_sell: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   USDT/NGN Buy Rate
                 </label>
                 <input
@@ -387,12 +387,12 @@ export function RateManagement() {
                   onChange={(e) =>
                     setCryptoForm({ ...cryptoForm, usdt_ngn_buy: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   USDT/USD Rate
                 </label>
                 <input
@@ -402,12 +402,12 @@ export function RateManagement() {
                   onChange={(e) =>
                     setCryptoForm({ ...cryptoForm, usdt_usd_rate: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   BTC/USDT Price
                 </label>
                 <input
@@ -418,12 +418,12 @@ export function RateManagement() {
                   onChange={(e) =>
                     setCryptoForm({ ...cryptoForm, btc_usdt_price: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   BTC/NGN Price
                 </label>
                 <input
@@ -434,7 +434,7 @@ export function RateManagement() {
                   onChange={(e) =>
                     setCryptoForm({ ...cryptoForm, btc_ngn_price: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
@@ -442,7 +442,7 @@ export function RateManagement() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 rounded-lg"
             >
               {loading ? 'Updating...' : 'Update Crypto Rates'}
             </Button>
@@ -453,11 +453,11 @@ export function RateManagement() {
       {/* OTC Desk Form */}
       {activeTab === 'otc' && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Update OTC Desk Configuration</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-6">Update OTC Desk Configuration</h3>
           <form onSubmit={handleOtcSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   USD Cost
                 </label>
                 <input
@@ -467,12 +467,12 @@ export function RateManagement() {
                   value={otcForm.usd_cost}
                   onChange={(e) => setOtcForm({ ...otcForm, usd_cost: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   NGN Cost
                 </label>
                 <input
@@ -482,12 +482,12 @@ export function RateManagement() {
                   value={otcForm.ngn_cost}
                   onChange={(e) => setOtcForm({ ...otcForm, ngn_cost: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Desk Spread (₦)
                 </label>
                 <input
@@ -497,13 +497,13 @@ export function RateManagement() {
                   value={otcForm.desk_spread}
                   onChange={(e) => setOtcForm({ ...otcForm, desk_spread: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-700">
+            <div className="p-4 bg-muted rounded-lg border border-border">
+              <p className="text-sm text-foreground">
                 <strong>Implied Rate:</strong>{' '}
                 {otcForm.usd_cost && otcForm.ngn_cost
                   ? `₦${(parseFloat(otcForm.ngn_cost) / parseFloat(otcForm.usd_cost)).toFixed(2)}`
@@ -514,7 +514,7 @@ export function RateManagement() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 rounded-lg"
             >
               {loading ? 'Updating...' : 'Update OTC Configuration'}
             </Button>

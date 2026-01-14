@@ -24,27 +24,30 @@ export default function BinancePage() {
           <CardTitle>Market Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+          <div className="overflow-x-auto rounded-xl border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
+            <table className="min-w-full bg-card text-sm text-foreground">
+              <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
                 <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     Coin
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     USD
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     NGN
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {prices && Object.entries(prices as Record<string, Price>).map(([coin, data]) => (
-                  <tr key={coin} className="border-b border-border/20 hover:bg-muted/20">
-                    <td className="px-4 py-4">{coin}</td>
-                    <td className="px-4 py-4">${data.USD.toLocaleString()}</td>
-                    <td className="px-4 py-4">₦{data.NGN.toLocaleString()}</td>
+                  <tr
+                    key={coin}
+                    className="text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]"
+                  >
+                    <td className="p-3">{coin}</td>
+                    <td className="p-3 text-foreground font-medium">${data.USD.toLocaleString()}</td>
+                    <td className="p-3 text-foreground font-medium">₦{data.NGN.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

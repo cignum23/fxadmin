@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 // Dynamically import chart to prevent hydration issues
 const Chart = dynamic(() => import('./RateChart'), { 
   ssr: false, 
-  loading: () => <div className="h-80 bg-gray-100 rounded-lg flex items-center justify-center">Loading chart...</div> 
+  loading: () => <div className="h-80 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">Loading chart...</div> 
 });
 
 interface FinalRate {
@@ -135,23 +135,23 @@ export function RateEngine() {
   }, [apiKey]);
 
   return (
-    <div className="w-full space-y-6 p-6 text-black">
+    <div className="w-full space-y-6 p-6 text-foreground">
       {/* API Key Input */}
-      <Card className="p-6 bg-gradient-to-r from-slate-50 to-slate-100 text-black">
+      <Card className="p-6">
         <div className="flex gap-4">
           <input
             type="password"
             placeholder="Enter API Key"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-black"
+            className="flex-1 px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <Button
             onClick={() => {
               fetchRate();
               fetchHistory();
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg"
           >
             Load
           </Button>
@@ -160,69 +160,69 @@ export function RateEngine() {
 
       {/* Error Alert */}
       {error && (
-        <Card className="p-4 bg-red-50 border border-red-200">
-          <p className="text-red-700 font-medium">Error: {error}</p>
+        <Card className="p-4 bg-danger/10 border border-danger/20">
+          <p className="text-danger font-medium">Error: {error}</p>
         </Card>
       )}
 
       {!currentRate ? (
-        <Card className="p-8 text-center text-gray-500">Enter API key and click Load to get started</Card>
+        <Card className="p-8 text-center text-muted-foreground">Enter API key and click Load to get started</Card>
       ) : currentRate ? (
         <>
           {/* Current Rate Display */}
-          <Card className="p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
+          <Card className="p-8 bg-primary/5 border border-primary/20">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Current Rate
                 </h2>
-                <div className="text-5xl font-bold text-blue-600">
+                <div className="text-5xl font-bold text-primary">
                   ₦{(currentRate.final_usd_ngn_rate ?? 0).toFixed(2)}
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   1 USD = {(currentRate.final_usd_ngn_rate ?? 0).toFixed(2)} NGN
                 </p>
-                <p className="text-xs text-gray-400 mt-4">
+                <p className="text-xs text-muted-foreground mt-4">
                   Updated: {new Date(currentRate.timestamp).toLocaleString()}
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg p-6 space-y-3">
-                <h3 className="font-semibold text-gray-700 mb-4">Rate Components & Calculation Details</h3>
+              <div className="bg-card rounded-lg p-6 space-y-3 border border-border">
+                <h3 className="font-semibold text-foreground mb-4">Rate Components & Calculation Details</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Baseline Rate:</span>
-                    <span className="font-semibold text-gray-800">
+                    <span className="text-muted-foreground">Baseline Rate:</span>
+                    <span className="font-semibold text-foreground">
                       ₦{(currentRate.baseline_rate ?? 0).toFixed(2)}
                     </span>
                   </div>
                   {currentRate.baseline_sources && currentRate.baseline_sources.length > 0 && (
-                    <div className="text-xs text-gray-500 pl-2 border-l-2 border-gray-300">
+                    <div className="text-xs text-muted-foreground pl-2 border-l-2 border-border">
                       From {currentRate.baseline_sources.length} source{currentRate.baseline_sources.length !== 1 ? 's' : ''}: {currentRate.baseline_sources.join(', ')}
                     </div>
                   )}
                   {currentRate.crypto_implied_rate && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Crypto Implied:</span>
-                      <span className="font-semibold text-gray-800">
+                      <span className="text-muted-foreground">Crypto Implied:</span>
+                      <span className="font-semibold text-foreground">
                         ₦{(currentRate.crypto_implied_rate ?? 0).toFixed(2)}
                       </span>
                     </div>
                   )}
                   {(currentRate.crypto_premium ?? 0) !== 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Crypto Premium:</span>
-                      <span className={`font-semibold ${(currentRate.crypto_premium ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="text-muted-foreground">Crypto Premium:</span>
+                      <span className={`font-semibold ${(currentRate.crypto_premium ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                         +₦{((currentRate.crypto_premium ?? 0).toFixed(2))}
                       </span>
                     </div>
                   )}
                   {(currentRate.liquidity_spread_raw ?? 0) !== 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Liquidity Spread:</span>
+                      <span className="text-muted-foreground">Liquidity Spread:</span>
                       <div className="text-right">
-                        <div className="font-semibold text-gray-600">Raw: ₦{(currentRate.liquidity_spread_raw ?? 0).toFixed(2)}</div>
-                        <div className={`font-semibold ${(currentRate.liquidity_spread ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <div className="font-semibold text-muted-foreground">Raw: ₦{(currentRate.liquidity_spread_raw ?? 0).toFixed(2)}</div>
+                        <div className={`font-semibold ${(currentRate.liquidity_spread ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                           Clamped: +₦{((currentRate.liquidity_spread ?? 0).toFixed(2))}
                         </div>
                       </div>
@@ -230,14 +230,14 @@ export function RateEngine() {
                   )}
                   {(currentRate.desk_spread ?? 0) !== 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Desk Spread:</span>
-                      <span className={`font-semibold ${(currentRate.desk_spread ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="text-muted-foreground">Desk Spread:</span>
+                      <span className={`font-semibold ${(currentRate.desk_spread ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                         +₦{((currentRate.desk_spread ?? 0).toFixed(2))}
                       </span>
                     </div>
                   )}
                   {currentRate.otc_status && (
-                    <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
+                    <div className="text-xs text-muted-foreground pt-2 border-t border-border">
                       <span className="font-semibold">OTC Desk Status:</span> {currentRate.otc_status}
                     </div>
                   )}
@@ -249,11 +249,11 @@ export function RateEngine() {
               <Button
                 onClick={refreshRate}
                 disabled={refreshing}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground px-6 py-2 rounded-lg"
               >
                 {refreshing ? 'Refreshing...' : 'Refresh Rate'}
               </Button>
-              <p className="text-xs text-gray-500 self-center">
+              <p className="text-xs text-muted-foreground self-center">
                 Method: {currentRate.calculation_method}
               </p>
             </div>

@@ -47,17 +47,17 @@ export default function CoinMarketCapPage() {
         </CardHeader>
 
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+          <div className="overflow-x-auto rounded-xl border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
+            <table className="min-w-full bg-card text-sm text-foreground">
+              <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
                 <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     Name
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     Symbol
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="p-3 font-medium text-left">
                     Price (USD)
                   </th>
                 </tr>
@@ -65,10 +65,13 @@ export default function CoinMarketCapPage() {
 
               <tbody>
                 {coins.map((coin: Coin) => (
-                  <tr key={coin.id} className="border-b border-border/20 hover:bg-muted/20">
-                    <td className="px-4 py-4">{coin.name}</td>
-                    <td className="px-4 py-4 uppercase">{coin.symbol}</td>
-                    <td className="px-4 py-4">
+                  <tr
+                    key={coin.id}
+                    className="text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]"
+                  >
+                    <td className="p-3">{coin.name}</td>
+                    <td className="p-3 uppercase">{coin.symbol}</td>
+                    <td className="p-3 text-foreground font-medium">
                       ${coin.quote.USD.price.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
