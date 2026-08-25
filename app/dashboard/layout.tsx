@@ -21,11 +21,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background">
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-sidebar border-b border-border flex items-center justify-between px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-sidebar text-sidebar-foreground border-b border-sidebar-border flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 -ml-2 text-muted-foreground hover:text-foreground"
+            className="p-2 -ml-2 text-sidebar-foreground/60 hover:text-sidebar-foreground"
           >
             <Menu className="w-5 h-5" />
           </button>

@@ -3,18 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Check } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || ''
-);
+const supabase = createSupabaseBrowserClient();
 
 export function RateManagement() {
-  const [internalApiKeys, setInternalApiKeys] = useState<string[]>([]);
-  const [selectedKeyIndex, setSelectedKeyIndex] = useState(0);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'crypto' | 'otc'>('crypto');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -26,15 +19,6 @@ export function RateManagement() {
     btc_ngn_price: number | null;
     timestamp: string;
   } | null>(null);
-
-  // Parse internal API keys from environment
-  useEffect(() => {
-    const keysEnv = process.env.NEXT_PUBLIC_INTERNAL_API_KEYS;
-    if (keysEnv) {
-      const keys = keysEnv.split(',').map(key => key.trim());
-      setInternalApiKeys(keys);
-    }
-  }, []);
 
   // Fetch internal crypto rates
   useEffect(() => {
@@ -73,19 +57,6 @@ export function RateManagement() {
     return () => clearInterval(interval);
   }, []);
 
-  const apiKey = internalApiKeys[selectedKeyIndex] || '';
-
-  const maskKey = (key: string): string => {
-    if (key.length <= 10) return key;
-    return key.substring(0, 10) + 'X'.repeat(key.length - 10);
-  };
-
-  const copyToClipboard = (key: string, index: number) => {
-    navigator.clipboard.writeText(key);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
-
   // Crypto Rates Form
   const [cryptoForm, setCryptoForm] = useState({
     usdt_ngn_sell: '',
@@ -107,10 +78,6 @@ export function RateManagement() {
     setLoading(true);
 
     try {
-      if (!apiKey) {
-        throw new Error('Internal API key required');
-      }
-
       const payload = {
         usdt_ngn_sell: cryptoForm.usdt_ngn_sell ? parseFloat(cryptoForm.usdt_ngn_sell) : null,
         usdt_ngn_buy: cryptoForm.usdt_ngn_buy ? parseFloat(cryptoForm.usdt_ngn_buy) : null,
@@ -119,53 +86,17 @@ export function RateManagement() {
         btc_ngn_price: cryptoForm.btc_ngn_price ? parseFloat(cryptoForm.btc_ngn_price) : null
       };
 
+      // Session cookie (set by the cookie-backed Supabase client) authorizes
+      // this call — middleware.ts and the route itself both check it.
       const response = await fetch('/api/fx/internal/crypto-rates', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to update crypto rates');
-      }
-
-      // Also save to Supabase for use in calculator
-      const { error: supabaseError } = await supabase
-        .from('internal_crypto_rates')
-        .insert({
-          usdt_ngn_buy: payload.usdt_ngn_buy,
-          usdt_ngn_sell: payload.usdt_ngn_sell,
-          usdt_usd_rate: payload.usdt_usd_rate,
-          btc_usdt_price: payload.btc_usdt_price,
-          btc_ngn_price: payload.btc_ngn_price
-        });
-
-      if (supabaseError) {
-        console.warn('Supabase internal_crypto_rates save warning:', supabaseError);
-      }
-
-      // Also save to platform_rates table with internal engine rate
-      // Use USDT/NGN buy rate as the USD/NGN rate for the internal engine
-      if (payload.usdt_ngn_buy) {
-        const { error: platformRatesError } = await supabase
-          .from('platform_rates')
-          .upsert({
-            platform_id: 'internal',
-            platform_name: 'Internal Engine',
-            rate_usd: payload.usdt_ngn_buy,
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: 'platform_id',
-          });
-
-        if (platformRatesError) {
-          console.warn('Platform rates save warning:', platformRatesError);
-        }
       }
 
       setMessage({ type: 'success', text: 'Crypto rates updated successfully' });
@@ -191,10 +122,6 @@ export function RateManagement() {
     setLoading(true);
 
     try {
-      if (!apiKey) {
-        throw new Error('Internal API key required');
-      }
-
       const payload = {
         usd_cost: parseFloat(otcForm.usd_cost),
         ngn_cost: parseFloat(otcForm.ngn_cost),
@@ -203,10 +130,7 @@ export function RateManagement() {
 
       const response = await fetch('/api/fx/internal/otc-desk', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -270,55 +194,6 @@ export function RateManagement() {
             </p>
           </Card>
         )}
-
-      {/* API Keys Display */}
-      <Card className="p-6">
-        <h3 className="text-sm font-semibold text-foreground mb-4">Internal API Keys</h3>
-        <div className="space-y-3">
-          {internalApiKeys.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No API keys configured</p>
-          ) : (
-            internalApiKeys.map((key, index) => (
-              <div key={index} className="flex items-center justify-between gap-2 p-3 bg-card border border-border rounded-lg">
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">Key {index + 1}</p>
-                  <code className="text-sm text-foreground font-mono break-all">{maskKey(key)}</code>
-                </div>
-                <button
-                  onClick={() => copyToClipboard(key, index)}
-                  className="flex items-center gap-1 px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors shrink-0"
-                >
-                  {copiedIndex === index ? (
-                    <>
-                      <Check size={16} />
-                      <span className="text-xs">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={16} />
-                      <span className="text-xs">Copy</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-        <div className="mt-4 pt-4 border-t border-border">
-          <label className="block text-xs font-semibold text-foreground mb-2">Select API Key to Use</label>
-          <select
-            value={selectedKeyIndex}
-            onChange={(e) => setSelectedKeyIndex(parseInt(e.target.value))}
-            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {internalApiKeys.map((_, index) => (
-              <option key={index} value={index}>
-                Key {index + 1}
-              </option>
-            ))}
-          </select>
-        </div>
-      </Card>
 
       {/* Message Alert */}
       {message && (

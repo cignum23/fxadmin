@@ -3,16 +3,16 @@ import { NextResponse } from "next/server";
 import { FxVendor } from "@/lib/types"; // shared vendor type
 
 export async function GET() {
+  // Only vendor sub-routes that actually exist under app/api/fx/ — the rest
+  // (wise, payoneer, skrill, westernunion, transfergo, afriex, pay4me) were
+  // never implemented and were 404ing silently on every call.
   const endpoints = [
     "/api/fx/abokifx",
-    "/api/fx/wise",
     "/api/fx/worldremit",
-    "/api/fx/payoneer",
-    "/api/fx/skrill",
-    "/api/fx/westernunion",
-    "/api/fx/transfergo",
-    "/api/fx/afriex",
-    "/api/fx/pay4me",
+    "/api/fx/aza",
+    "/api/fx/vertofx",
+    "/api/fx/fluid",
+    "/api/fx/kora",
   ];
 
   const results: FxVendor[] = [];

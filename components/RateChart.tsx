@@ -48,19 +48,19 @@ export default function RateChart({ data }: RateChartProps) {
           <Line
             type="monotone"
             dataKey="final_usd_ngn_rate"
-            stroke="#002E56"
+            stroke="var(--chart-usd-fiat)"
             dot={false}
             name="Final Rate"
-            strokeWidth={2}
+            strokeWidth={2.5}
           />
           <Line
             type="monotone"
             dataKey="baseline_rate"
-            stroke="#BDA156"
+            stroke="var(--chart-neutral)"
             dot={false}
             name="Baseline"
-            strokeWidth={1}
-            strokeDasharray="5 5"
+            strokeWidth={1.5}
+            strokeDasharray="6 4"
           />
         </LineChart>
       </ResponsiveContainer>

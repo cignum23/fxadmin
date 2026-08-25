@@ -285,7 +285,7 @@ export default function CalculatorPage() {
             {/* Rate provenance badge per selected platform */}
             <div className="mt-4">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <div className="w-2 h-2 rounded-full bg-success"></div>
                 <span className="text-xs font-medium text-muted-foreground">
                   {isUsingLive ? "Live rate" : "Last rate (DB)"}
                 </span>
@@ -376,9 +376,9 @@ export default function CalculatorPage() {
                         <p className="font-medium flex items-center gap-2">
                           {platform.name}
                           {rowLive > 0 ? (
-                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">Live</span>
+                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-success/10 text-success border border-success/20">Live</span>
                           ) : (
-                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-accent/25 text-accent-foreground border border-accent/40">Last</span>
+                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground border border-border">Last</span>
                           )}
                         </p>
                       </td>

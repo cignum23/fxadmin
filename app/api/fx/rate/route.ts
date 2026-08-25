@@ -1,21 +1,20 @@
 import { NextResponse } from 'next/server';
 import { calculateFinalFxRate } from '@/lib/fx-engine';
-import { verifyApiKey, verifyIPWhitelist } from '@/lib/fx-engine/utils/auth';
-import { checkRateLimit } from '@/lib/fx-engine/utils/rate-limiter';
+import { verifyRateReadKeyOrSession, verifyIPWhitelist } from '@/lib/fx-engine/utils/auth';
+import { checkRateLimit, getClientIp } from '@/lib/fx-engine/utils/rate-limiter';
 
 export async function GET(request: Request) {
   try {
-    // Verify API key
-    const apiKey = request.headers.get('x-api-key');
-    if (!verifyApiKey(apiKey)) {
+    // Verify a rate-read key, an internal key, or an active dashboard session
+    if (!(await verifyRateReadKeyOrSession(request))) {
       return NextResponse.json(
-        { error: 'Unauthorized - Invalid API key' },
+        { error: 'Unauthorized - Invalid API key or session' },
         { status: 401 }
       );
     }
 
     // Verify IP whitelist (optional, comment out if not needed)
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = getClientIp(request);
     if (!verifyIPWhitelist(ip)) {
       return NextResponse.json(
         { error: 'Forbidden - IP not whitelisted' },
@@ -23,8 +22,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Check rate limit
-    const allowed = await checkRateLimit();
+    // Check rate limit (per-caller, not global)
+    const allowed = await checkRateLimit(ip);
     if (!allowed) {
       return NextResponse.json(
         { error: 'Too many requests' },

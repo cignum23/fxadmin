@@ -26,7 +26,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation Tabs */}
-      <div className="sticky top-0 bg-card border-b border-gray-600 shadow-card z-10">
+      <div className="sticky top-0 bg-card border-b border-border shadow-card z-10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-8">
             <button

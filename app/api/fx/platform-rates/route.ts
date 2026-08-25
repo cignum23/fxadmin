@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { CRYPTO_PLATFORMS } from "@/lib/constants/cryptoPlatforms";
+import { fetchVendorRates } from "@/lib/api/fetchVendorRates";
 
 interface PlatformRate {
   id: string;
@@ -31,58 +32,50 @@ export async function GET() {
       );
     }
 
-    // If no rates present, synthesize from vendors API as a fallback
+    // If no rates present, synthesize from vendor rates as a fallback
     if (!data || data.length === 0) {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const vendorsRes = await fetch(`${baseUrl}/api/fx/vendors`, { cache: "no-store" });
+        const vendors = await fetchVendorRates();
+        const rates = vendors
+          .map((v) => v.rate)
+          .filter((r): r is number => typeof r === "number" && r > 0)
+          .sort((a, b) => a - b);
 
-        if (vendorsRes.ok) {
-          const vendors = (await vendorsRes.json()) as Array<{ name: string; rate: number }>;
-          const rates = vendors
-            .map((v) => v.rate)
-            .filter((r): r is number => typeof r === "number" && r > 0)
-            .sort((a, b) => a - b);
+        if (rates.length > 0) {
+          const mid = Math.floor(rates.length / 2);
+          let sharedFxRate = rates.length % 2 === 1 ? rates[mid] : (rates[mid - 1] + rates[mid]) / 2;
+          sharedFxRate = Math.round(sharedFxRate * 100) / 100;
 
-          if (rates.length > 0) {
-            const mid = Math.floor(rates.length / 2);
-            let sharedFxRate = rates.length % 2 === 1 ? rates[mid] : (rates[mid - 1] + rates[mid]) / 2;
-            sharedFxRate = Math.round(sharedFxRate * 100) / 100;
+          const fallback = [
+            { platform_id: "coingecko", platform_name: "CoinGecko" },
+            { platform_id: "coinmarketcap", platform_name: "CoinMarketCap" },
+            { platform_id: "cryptocompare", platform_name: "CryptoCompare" },
+            // { platform_id: "binance", platform_name: "Binance" },
+            { platform_id: "internal", platform_name: "Internal Engine" },
+          ].map((p) => ({
+            id: `${p.platform_id}-fallback`,
+            platform_id: p.platform_id,
+            platform_name: p.platform_name,
+            rate_usd: sharedFxRate,
+            updated_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          }));
 
-            const fallback = [
-              { platform_id: "coingecko", platform_name: "CoinGecko" },
-              { platform_id: "coinmarketcap", platform_name: "CoinMarketCap" },
-              { platform_id: "cryptocompare", platform_name: "CryptoCompare" },
-              // { platform_id: "binance", platform_name: "Binance" },
-              { platform_id: "internal", platform_name: "Internal Engine" },
-            ].map((p) => ({
-              id: `${p.platform_id}-fallback`,
-              platform_id: p.platform_id,
-              platform_name: p.platform_name,
-              rate_usd: sharedFxRate,
-              updated_at: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-            }));
-
-            return NextResponse.json(fallback, {
-              headers: {
-                "Cache-Control": "public, s-maxage=10, stale-while-revalidate=20",
-              },
-            });
-          }
+          return NextResponse.json(fallback, {
+            headers: {
+              "Cache-Control": "public, s-maxage=10, stale-while-revalidate=20",
+            },
+          });
         }
       } catch (fallbackErr) {
-        console.warn("[API] Fallback vendors fetch failed:", fallbackErr);
+        console.warn("[API] Fallback vendor rates fetch failed:", fallbackErr);
       }
     }
 
-    // Helper to compute shared FX rate from vendors API (median)
+    // Helper to compute shared FX rate from vendor rates (median)
     const computeSharedFxRate = async (): Promise<number | null> => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const vendorsRes = await fetch(`${baseUrl}/api/fx/vendors`, { cache: "no-store" });
-        if (!vendorsRes.ok) return null;
-        const vendors = (await vendorsRes.json()) as Array<{ name: string; rate: number }>;
+        const vendors = await fetchVendorRates();
         const rates = vendors
           .map((v) => v.rate)
           .filter((r): r is number => typeof r === "number" && r > 0)

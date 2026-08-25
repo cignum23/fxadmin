@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchAllPlatformRates } from "@/lib/api/fetchPlatformRates";
+import { fetchVendorRates } from "@/lib/api/fetchVendorRates";
 import { supabase } from "@/lib/supabaseClient";
 
 /**
@@ -16,36 +17,26 @@ export async function GET(request: Request) {
 
     console.log("[CRON] Starting platform rates update...");
 
-    // Fetch the shared FX rate (USD → NGN) from vendors API once
+    // Fetch the shared FX rate (USD → NGN) from vendor rates once
     let sharedFxRate = 0;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const vendorsRes = await fetch(`${baseUrl}/api/fx/vendors`, {
-        cache: "no-store",
-      });
+      const vendors = await fetchVendorRates();
 
-      if (vendorsRes.ok) {
-        const vendors = (await vendorsRes.json()) as Array<{
-          name: string;
-          rate: number;
-        }>;
+      if (vendors && vendors.length > 0) {
+        // Get median rate for stability
+        const rates = vendors
+          .map((v) => v.rate)
+          .filter((r): r is number => typeof r === "number" && r > 0)
+          .sort((a, b) => a - b);
 
-        if (vendors && vendors.length > 0) {
-          // Get median rate for stability
-          const rates = vendors
-            .map((v) => v.rate)
-            .filter((r): r is number => typeof r === "number" && r > 0)
-            .sort((a, b) => a - b);
-
-          if (rates.length > 0) {
-            const mid = Math.floor(rates.length / 2);
-            sharedFxRate =
-              rates.length % 2 === 1
-                ? rates[mid]
-                : (rates[mid - 1] + rates[mid]) / 2;
-            sharedFxRate = Math.round(sharedFxRate * 100) / 100;
-            console.log(`[CRON] Fetched shared FX rate: ₦${sharedFxRate}`);
-          }
+        if (rates.length > 0) {
+          const mid = Math.floor(rates.length / 2);
+          sharedFxRate =
+            rates.length % 2 === 1
+              ? rates[mid]
+              : (rates[mid - 1] + rates[mid]) / 2;
+          sharedFxRate = Math.round(sharedFxRate * 100) / 100;
+          console.log(`[CRON] Fetched shared FX rate: ₦${sharedFxRate}`);
         }
       }
     } catch (fxError) {

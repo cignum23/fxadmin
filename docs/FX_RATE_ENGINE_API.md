@@ -6,9 +6,19 @@ https://your-domain.com/api/fx
 ```
 
 ## Authentication
-All endpoints require API key authentication via the `x-api-key` header:
+Two key classes exist, and they are **not interchangeable**:
+
+- **Rate-read keys** (`RATE_READ_API_KEYS`) — read-only. Accepted by `/api/fx/rate` and
+  `/api/fx/history` only. This is the key class external/mobile clients should be issued.
+- **Internal keys** (`INTERNAL_API_KEYS`) — also accepted by `/api/fx/rate` and
+  `/api/fx/history` for backward compatibility with existing internal callers, but carries
+  no write access either: `/api/fx/internal/*` (the endpoints that actually set the rate
+  engine's inputs) require a logged-in Supabase admin session, not any API key, regardless
+  of which key class is presented.
+
+Either key is sent the same way, via the `x-api-key` header:
 ```bash
-curl -H "x-api-key: your_api_key" https://your-domain.com/api/fx/rate
+curl -H "x-api-key: your_rate_read_key" https://your-domain.com/api/fx/rate
 ```
 
 ## Endpoints
@@ -19,7 +29,8 @@ curl -H "x-api-key: your_api_key" https://your-domain.com/api/fx/rate
 Returns the current USD → NGN exchange rate with all calculation components.
 
 **Headers:**
-- `x-api-key` (required): Your API key
+- `x-api-key` (required): A rate-read key, an internal key, or omit if calling with an
+  authenticated dashboard session cookie instead
 - `x-forwarded-for` (optional): For IP whitelist verification
 
 **Query Parameters:**
@@ -59,7 +70,8 @@ curl -H "x-api-key: your_api_key" https://your-domain.com/api/fx/rate
 Returns historical rates within a specified time period.
 
 **Headers:**
-- `x-api-key` (required): Your API key
+- `x-api-key` (required): A rate-read key, an internal key, or omit if calling with an
+  authenticated dashboard session cookie instead
 
 **Query Parameters:**
 - `limit` (optional, default: 100): Maximum number of records (max 1000)
@@ -102,8 +114,9 @@ curl -H "x-api-key: your_api_key" \
 
 Updates the internal crypto rate data used for crypto-implied rate calculation.
 
-**Headers:**
-- `x-api-key` (required): Internal API key
+**Auth:** No API key is accepted here. Requires a logged-in Supabase admin session
+(dashboard cookie) — this is the endpoint that writes the margin the whole rate engine is
+built on, so it is intentionally session-only, not key-accessible at all.
 
 **Request Body:**
 ```json
@@ -130,10 +143,11 @@ Updates the internal crypto rate data used for crypto-implied rate calculation.
 - `401`: Unauthorized
 - `500`: Database error
 
-**Example:**
+**Example:** (requires a browser session cookie from a logged-in dashboard admin — cannot
+be called with `curl` and a static key)
 ```bash
 curl -X POST \
-  -H "x-api-key: internal_api_key" \
+  -b "<dashboard session cookie>" \
   -H "Content-Type: application/json" \
   -d '{
     "usdt_ngn_sell": 1455.00,
@@ -151,8 +165,7 @@ curl -X POST \
 
 Retrieves the latest stored internal crypto rate data.
 
-**Headers:**
-- `x-api-key` (required): Internal API key
+**Auth:** No API key is accepted — same Supabase admin session requirement as Endpoint 3.
 
 **Response:**
 ```json
@@ -167,9 +180,9 @@ Retrieves the latest stored internal crypto rate data.
 }
 ```
 
-**Example:**
+**Example:** (requires a browser session cookie from a logged-in dashboard admin)
 ```bash
-curl -H "x-api-key: internal_api_key" \
+curl -b "<dashboard session cookie>" \
   https://your-domain.com/api/fx/internal/crypto-rates
 ```
 
@@ -180,8 +193,8 @@ curl -H "x-api-key: internal_api_key" \
 
 Updates OTC desk spread and USD cost data.
 
-**Headers:**
-- `x-api-key` (required): Internal API key
+**Auth:** No API key is accepted here either — same Supabase admin session requirement as
+Endpoint 3, for the same reason.
 
 **Request Body:**
 ```json
@@ -227,8 +240,7 @@ curl -X POST \
 
 Retrieves the latest OTC desk rate configuration.
 
-**Headers:**
-- `x-api-key` (required): Internal API key
+**Auth:** No API key is accepted — same Supabase admin session requirement as Endpoint 3.
 
 **Response:**
 ```json
@@ -242,9 +254,9 @@ Retrieves the latest OTC desk rate configuration.
 }
 ```
 
-**Example:**
+**Example:** (requires a browser session cookie from a logged-in dashboard admin)
 ```bash
-curl -H "x-api-key: internal_api_key" \
+curl -b "<dashboard session cookie>" \
   https://your-domain.com/api/fx/internal/otc-desk
 ```
 
@@ -291,6 +303,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 # API Authentication
 INTERNAL_API_KEYS=key1,key2,key3
+RATE_READ_API_KEYS=wallet_app_key1,other_read_client_key2
 CRON_SECRET=your_random_secret_key
 
 # IP Whitelist (optional, leave empty to allow all)

@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
-import { verifyInternalApiKey } from '@/lib/fx-engine/utils/auth';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
+async function requireAdminSession() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
 
 export async function POST(request: Request) {
   try {
-    const apiKey = request.headers.get('x-api-key');
-    if (!verifyInternalApiKey(apiKey)) {
+    // middleware.ts already gates /api/fx/internal/*; this is defense in depth
+    // for a route that writes the margin the whole rate engine is built on.
+    const user = await requireAdminSession();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -19,13 +29,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('otc_desk_rates')
       .insert({
         usd_cost: data.usd_cost,
         ngn_cost: data.ngn_cost || 0,
         desk_spread: data.desk_spread,
-        updated_by: data.updated_by || 'system'
+        updated_by: user.email ?? 'admin'
       });
 
     if (error) {
@@ -44,14 +54,14 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const apiKey = request.headers.get('x-api-key');
-    if (!verifyInternalApiKey(apiKey)) {
+    const user = await requireAdminSession();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('otc_desk_rates')
       .select('*')
       .order('timestamp', { ascending: false })

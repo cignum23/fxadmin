@@ -33,8 +33,8 @@ export default function PriceChart({ labels, dataPoints, coin }: Props) {
             {
               label: `${coin} Price`,
               data: dataPoints,
-              borderColor: "#002E56",
-              backgroundColor: "rgba(189, 161, 86, 0.18)",
+              borderColor: "#50e8f4",
+              backgroundColor: "rgba(80, 232, 244, 0.18)",
               tension: 0.4,
             },
           ],

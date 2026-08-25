@@ -76,7 +76,7 @@ This project is a Next.js + Tailwind CSS admin dashboard for FX rate computation
 	- `SUPABASE_SERVICE_ROLE_KEY` for server-side writes (API routes).
 	- `CMC_API_KEY` for CoinMarketCap API access.
 	- `CRON_SECRET` to authorize cron updates.
-	- `NEXT_PUBLIC_INTERNAL_API_KEYS` comma-separated keys for internal engine.
+	- `INTERNAL_API_KEYS` comma-separated keys for external server-to-server consumers of `/api/fx/rate` and `/api/fx/rate-fallback` — **server-only, never `NEXT_PUBLIC_`**. Admin rate-setting (`/api/fx/internal/*`, `/dashboard`) is gated by a Supabase session via `middleware.ts`, not an API key.
 
 ## Operational Notes
 

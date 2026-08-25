@@ -82,8 +82,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-sm flex justify-between">
-            <a href="/signup" className="text-primary">Create account</a>
+          <div className="text-sm flex justify-end">
             <a href="/forgot-password" className="text-primary">Forgot password?</a>
           </div>
         </form>

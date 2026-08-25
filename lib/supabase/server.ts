@@ -1,0 +1,31 @@
+// lib/supabase/server.ts
+// Session-aware Supabase client for Route Handlers / Server Components,
+// reading the auth cookie set by lib/supabase/browser.ts's client.
+import { createServerClient, type SetAllCookies } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ?? "",
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll: ((cookiesToSet) => {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Called from a context that can't mutate response cookies
+            // (e.g. a Server Component) — session refresh happens in
+            // middleware.ts instead, so this is safe to ignore here.
+          }
+        }) satisfies SetAllCookies,
+      },
+    }
+  );
+}

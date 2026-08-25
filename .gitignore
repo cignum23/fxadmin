@@ -42,3 +42,7 @@ next-env.d.ts
 
 #scraper
 /scraper/scraper.js
+
+# stray local dev artifacts
+/test-vendors.js
+/build_output.log

@@ -6,9 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 // Dynamically import chart to prevent hydration issues
-const Chart = dynamic(() => import('./RateChart'), { 
-  ssr: false, 
-  loading: () => <div className="h-80 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">Loading chart...</div> 
+const Chart = dynamic(() => import('./RateChart'), {
+  ssr: false,
+  loading: () => <div className="h-80 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">Loading chart...</div>
 });
 
 interface FinalRate {
@@ -36,19 +36,13 @@ export function RateEngine() {
   const [currentRate, setCurrentRate] = useState<FinalRate | null>(null);
   const [history, setHistory] = useState<HistoryData[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [apiKey, setApiKey] = useState('');
 
+  // Session cookie authorizes these calls — no API key needed once logged in.
   const fetchRate = async () => {
     try {
-      if (!apiKey) {
-        setError('API key required');
-        return;
-      }
-
-      const response = await fetch('/api/fx/rate', {
-        headers: { 'x-api-key': apiKey }
-      });
+      const response = await fetch('/api/fx/rate');
 
       if (!response.ok) {
         const data = await response.json() as Record<string, unknown>;
@@ -65,11 +59,7 @@ export function RateEngine() {
 
   const fetchHistory = async () => {
     try {
-      if (!apiKey) return;
-
-      const response = await fetch('/api/fx/history?limit=50&hours=24', {
-        headers: { 'x-api-key': apiKey }
-      });
+      const response = await fetch('/api/fx/history?limit=50&hours=24');
 
       if (!response.ok) {
         const errorData = await response.json() as Record<string, unknown>;
@@ -78,7 +68,7 @@ export function RateEngine() {
       }
 
       const data = await response.json() as { data?: Array<Record<string, unknown>> };
-      
+
       if (!data.data || !Array.isArray(data.data)) {
         console.warn('No history data returned from API');
         setHistory([]);
@@ -102,14 +92,10 @@ export function RateEngine() {
   const refreshRate = async () => {
     setRefreshing(true);
     try {
-      if (!apiKey) return;
-
-      const response = await fetch('/api/cron/update-rates', {
-        headers: { 'authorization': `Bearer ${apiKey}` }
-      });
-
-      if (!response.ok) throw new Error('Failed to refresh');
-
+      // calculateFinalFxRate() recomputes and persists on every /api/fx/rate
+      // call, so "refresh" just means fetching again — no separate
+      // /api/cron/update-rates call needed (that endpoint checks CRON_SECRET,
+      // a different secret entirely, so calling it from here never worked).
       await fetchRate();
       await fetchHistory();
     } catch (err) {
@@ -120,44 +106,19 @@ export function RateEngine() {
   };
 
   useEffect(() => {
-    if (apiKey) {
-      fetchRate();
-      fetchHistory();
-      const interval = setInterval(() => {
-        fetchRate();
-      }, 30000); // Refresh every 30 seconds
+    setLoading(true);
+    Promise.all([fetchRate(), fetchHistory()]).finally(() => setLoading(false));
 
-      return () => clearInterval(interval);
-    }
-    // Intentionally omit fetchRate and fetchHistory from dependencies
-    // They are defined inside useEffect to avoid infinite loops
+    const interval = setInterval(() => {
+      fetchRate();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey]);
+  }, []);
 
   return (
     <div className="w-full space-y-6 p-6 text-foreground">
-      {/* API Key Input */}
-      <Card className="p-6">
-        <div className="flex gap-4">
-          <input
-            type="password"
-            placeholder="Enter API Key"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="flex-1 px-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <Button
-            onClick={() => {
-              fetchRate();
-              fetchHistory();
-            }}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg"
-          >
-            Load
-          </Button>
-        </div>
-      </Card>
-
       {/* Error Alert */}
       {error && (
         <Card className="p-4 bg-danger/10 border border-danger/20">
@@ -165,9 +126,11 @@ export function RateEngine() {
         </Card>
       )}
 
-      {!currentRate ? (
-        <Card className="p-8 text-center text-muted-foreground">Enter API key and click Load to get started</Card>
-      ) : currentRate ? (
+      {loading ? (
+        <Card className="p-8 text-center text-muted-foreground">Loading current rate…</Card>
+      ) : !currentRate ? (
+        <Card className="p-8 text-center text-muted-foreground">No rate available yet.</Card>
+      ) : (
         <>
           {/* Current Rate Display */}
           <Card className="p-8 bg-primary/5 border border-primary/20">
@@ -262,7 +225,7 @@ export function RateEngine() {
           {/* Chart */}
           {history.length > 0 && <Chart data={history} />}
         </>
-      ) : null}
+      )}
     </div>
   );
 }

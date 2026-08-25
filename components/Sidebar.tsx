@@ -50,7 +50,7 @@ const handleLogout = async () => {
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-50 h-full w-72 bg-gradient-to-b from-[#021324] to-[#041b30] transition-transform duration-300 lg:translate-x-0",
+        "fixed top-0 left-0 z-50 h-full w-72 bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
       )}
     >
@@ -66,7 +66,7 @@ const handleLogout = async () => {
 
           <button
             onClick={closeSidebar}
-            className="lg:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground"
+            className="lg:hidden p-2 -mr-2 text-sidebar-foreground/60 hover:text-sidebar-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -101,7 +101,7 @@ const handleLogout = async () => {
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+            className="w-full justify-start gap-3 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           >
             <LogOut className="w-5 h-5" />
             Sign out

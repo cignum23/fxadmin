@@ -16,9 +16,17 @@ export async function GET() {
       .text()
       .trim();
 
+    const rate = parseFloat(usdRate.replace(/,/g, ""));
+    if (!Number.isFinite(rate) || rate <= 0) {
+      return NextResponse.json(
+        { error: "AZA Finance rate unavailable or unparseable" },
+        { status: 502 }
+      );
+    }
+
     return NextResponse.json({
       name: "AZA Finance",
-      rate: parseFloat(usdRate.replace(/,/g, "")),
+      rate,
       source: url,
     });
   } catch (err) {

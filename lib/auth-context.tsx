@@ -3,8 +3,12 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { supabase, SupabaseUser } from "./supabaseClient";
+import type { SupabaseUser } from "./supabaseClient";
+import { createSupabaseBrowserClient } from "./supabase/browser";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+
+// Cookie-backed client so the session is visible to middleware.ts.
+const supabase = createSupabaseBrowserClient();
 
 /**
  * Types exposed to your UI components

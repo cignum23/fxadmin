@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import { verifyApiKey } from '@/lib/fx-engine/utils/auth';
+import { verifyRateReadKeyOrSession } from '@/lib/fx-engine/utils/auth';
 
 export async function GET(request: Request) {
   try {
-    const apiKey = request.headers.get('x-api-key');
-    if (!verifyApiKey(apiKey)) {
+    if (!(await verifyRateReadKeyOrSession(request))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

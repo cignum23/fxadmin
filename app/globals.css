@@ -74,107 +74,64 @@
 }
 
 /* ===========================================
-   DARK MODE (DEFAULT)
+   THEME (DEFAULT — ONLY THEME)
+   Dark sidebar against a light main canvas, one
+   accent color running through both. No light/dark
+   toggle exists in the app (no next-themes).
    =========================================== */
 :root {
   /* ==========================================
-     MARKET OVERVIEW THEME (DEFAULT)
-     Matches the requested pixel-for-pixel spec
+     BRAND PALETTE: #001619 / #50e8f4 / #c7f8fe
      ========================================== */
-  --color-bg: #062b4f;                 /* background */
-  --color-surface: #0b3a5d;            /* card */
-  --color-card-hover: #0f466e;         /* cardHover */
-  --color-header: #083357;             /* header */
+  --color-bg: #c7f8fe;                 /* main canvas — light */
+  --color-surface: #c7f8fe;            /* card — flat, separated by border + shadow only */
+  --color-card-hover: rgba(0, 22, 25, 0.04);
+  --color-header: rgba(0, 22, 25, 0.035); /* table header row tint */
 
-  --color-border: #bda1569d; /* gray-600 separators */
+  --color-border: rgba(0, 22, 25, 0.08); /* neutral separators on the light canvas */
 
-  --color-foreground: #4b5563;         /* foreground */
-  --color-muted: #0a3557;              /* muted */
-  --color-muted-foreground: #9fb7cc;   /* mutedForeground */
+  --color-foreground: #001619;         /* main body text — dark */
+  --color-muted: rgba(0, 22, 25, 0.035);
+  --color-muted-foreground: rgba(0, 22, 25, 0.55);
 
-  /* Brand anchors */
-  --color-primary: #bda156;            /* gold */
-  --color-primary-foreground: #0b3a5d;
+  /* Brand anchors — one accent color used throughout */
+  --color-primary: #50e8f4;
+  --color-primary-foreground: #001619;
 
-  --color-secondary: #002e56;          /* deep blue */
-  --color-secondary-foreground: #4b5563;
+  --color-secondary: rgba(0, 22, 25, 0.05);
+  --color-secondary-foreground: #001619;
 
-  --color-accent: #bda156;             /* gold */
-  --color-accent-foreground: #0b3a5d;
+  --color-accent: #50e8f4;
+  --color-accent-foreground: #001619;
 
-  /* Status */
-  --color-success: #22c55e;
+  /* Status (functional, not brand) — darker shades for legibility on the light canvas */
+  --color-success: #16a34a;
   --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-danger-foreground: #0b3a5d;
+  --color-danger: #dc2626;
+  --color-danger-foreground: #001619;
 
-  --color-ring: #bda156;
+  --color-ring: #50e8f4;
 
-  /* Sidebar (keep cohesive with the dark theme) */
-  --color-sidebar: #083357;
-  --color-sidebar-foreground: #4b5563;
-  --color-sidebar-border: #4b5563;
-  --color-sidebar-accent: #4b5563;
-  --color-sidebar-primary: #bda156;
+  /* Sidebar — stays the dark zone */
+  --color-sidebar: #001619;
+  --color-sidebar-foreground: #c7f8fe;
+  --color-sidebar-border: rgba(199, 248, 254, 0.08);
+  --color-sidebar-accent: rgba(80, 232, 244, 0.10);
+  --color-sidebar-primary: #50e8f4;
 
   /* Chart palette */
-  --chart-fx-buy: #22c55e;
-  --chart-fx-sell: #ef4444;
-  --chart-neutral: #9fb7cc;
-  --chart-usd-fiat: #bda156;
-  --chart-crypto: #e6f1fa;
-}
-
-/* ===========================================
-   LIGHT MODE
-   =========================================== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Keep the same Market Overview theme even in dark mode */
-    --color-bg: #062b4f;
-    --color-surface: #0b3a5d;
-    --color-card-hover: #0f466e;
-    --color-header: #083357;
-
-    --color-border: #ffc320b0;
-
-    --color-foreground: #faefe6; /* text color */
-    --color-muted: #0a3557;
-    --color-muted-foreground: #9fb7cc;
-
-    --color-primary: #bda156;
-    --color-primary-foreground: #0b3a5d;
-
-    --color-secondary: #002e56;
-    --color-secondary-foreground: #e6f1fa;
-
-    --color-accent: #bda156;
-    --color-accent-foreground: #0b3a5d;
-
-    --color-success: #22c55e;
-    --color-warning: #f59e0b;
-    --color-danger: #ef4444;
-    --color-danger-foreground: #0b3a5d;
-
-    --color-ring: #bda156;
-
-    --color-sidebar: #083357;
-    --color-sidebar-foreground: #e6f1fa;
-    --color-sidebar-border: #4b5563;
-    --color-sidebar-accent: #4b5563;
-    --color-sidebar-primary: #bda156;
-  }
+  --chart-fx-buy: #16a34a;
+  --chart-fx-sell: #dc2626;
+  --chart-neutral: rgba(0, 22, 25, 0.35);
+  --chart-usd-fiat: #50e8f4;
+  --chart-crypto: #001619;
 }
 
 /* ===========================================
    GLOBAL DEFAULTS
    =========================================== */
 body {
-  /* Premium background depth (keeps within deep blue + gold language) */
-  background:
-    radial-gradient(1200px circle at 20% -10%, rgba(0, 46, 86, 0.55), transparent 55%),
-    radial-gradient(900px circle at 85% 0%, rgba(189, 161, 86, 0.20), transparent 58%),
-    linear-gradient(180deg, #062b4f 0%, #002e56 40%, #062b4f 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans, Inter, ui-sans-serif, system-ui);
   margin: 0;
@@ -212,11 +169,7 @@ select {
    TABLE HIGHLIGHT
    =========================================== */
 .row-selected {
-  background: linear-gradient(
-    90deg,
-    rgba(0, 46, 86, 0.10),
-    rgba(189, 161, 86, 0.08)
-  );
+  background: rgba(80, 232, 244, 0.06);
   border-left: 4px solid var(--primary);
 }
 

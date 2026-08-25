@@ -17,9 +17,17 @@ export async function GET() {
       .text()
       .trim();
 
+    const rate = parseFloat(usdNgn.replace(/,/g, ""));
+    if (!Number.isFinite(rate) || rate <= 0) {
+      return NextResponse.json(
+        { error: "VertoFX rate unavailable or unparseable" },
+        { status: 502 }
+      );
+    }
+
     return NextResponse.json({
       name: "VertoFX",
-      rate: parseFloat(usdNgn.replace(/,/g, "")),
+      rate,
       source: url,
     });
   } catch (err) {
