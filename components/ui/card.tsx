@@ -1,72 +1,5 @@
-// import * as React from "react"
-
-// import { cn } from "@/lib/utils"
-
-// const Card = React.forwardRef<
-//   HTMLDivElement,
-//   React.HTMLAttributes<HTMLDivElement>
-// >(({ className, ...props }, ref) => (
-//   <div
-//     ref={ref}
-//     className={cn(
-//       "rounded-lg border bg-card text-card-foreground shadow-sm",
-//       className
-//     )}
-//     {...props}
-//   />
-// ))
-// Card.displayName = "Card"
-
-// const CardHeader = React.forwardRef<
-//   HTMLDivElement,
-//   React.HTMLAttributes<HTMLDivElement>
-// >(({ className, ...props }, ref) => (
-//   <div
-//     ref={ref}
-//     className={cn("flex flex-col space-y-1.5 p-6", className)}
-//     {...props}
-//   />
-// ))
-// CardHeader.displayName = "CardHeader"
-
-// const CardTitle = React.forwardRef<
-//   HTMLParagraphElement,
-//   React.HTMLAttributes<HTMLHeadingElement>
-// >(({ className, ...props }, ref) => (
-//   <h3
-//     ref={ref}
-//     className={cn(
-//       "text-2xl font-semibold leading-none tracking-tight",
-//       className
-//     )}
-//     {...props}
-//   />
-// ))
-// CardTitle.displayName = "CardTitle"
-
-// const CardContent = React.forwardRef<
-//   HTMLDivElement,
-//   React.HTMLAttributes<HTMLDivElement>
-// >(({ className, ...props }, ref) => (
-//   <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-// ))
-// CardContent.displayName = "CardContent"
-
-// export { Card, CardHeader, CardTitle, CardContent }
-
-
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
-
-/**
- * Modern Professional Card UI using your global color variables:
- *
- * bg-card
- * text-card-foreground
- * border-border
- * shadow-card
- */
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -75,7 +8,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-border bg-card text-card-foreground shadow-card transition-all duration-200 hover:shadow-card-hover",
+      "rounded-xl border border-border bg-card text-card-foreground shadow-card transition-colors duration-200 hover:border-[color-mix(in_srgb,var(--primary)_45%,var(--border))]",
       className
     )}
     {...props}
@@ -90,7 +23,7 @@ const CardHeader = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex flex-col gap-1.5 px-6 py-4 border-b border-border bg-card-header",
+      "flex flex-col gap-1.5 border-b border-border bg-card-header px-5 py-4 sm:px-6",
       className
     )}
     {...props}
@@ -104,10 +37,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn(
-      "text-xl font-semibold tracking-tight text-card-foreground",
-      className
-    )}
+    className={cn("text-lg font-semibold leading-7 text-foreground", className)}
     {...props}
   />
 ));
@@ -117,13 +47,8 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("px-6 py-4", className)}
-    {...props}
-  />
+  <div ref={ref} className={cn("px-5 py-4 sm:px-6", className)} {...props} />
 ));
 CardContent.displayName = "CardContent";
 
 export { Card, CardHeader, CardTitle, CardContent };
-

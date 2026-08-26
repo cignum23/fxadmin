@@ -8,29 +8,71 @@ https://your-domain.com/api/fx
 ## Authentication
 Two key classes exist, and they are **not interchangeable**:
 
-- **Rate-read keys** (`RATE_READ_API_KEYS`) — read-only. Accepted by `/api/fx/rate` and
-  `/api/fx/history` only. This is the key class external/mobile clients should be issued.
-- **Internal keys** (`INTERNAL_API_KEYS`) — also accepted by `/api/fx/rate` and
-  `/api/fx/history` for backward compatibility with existing internal callers, but carries
-  no write access either: `/api/fx/internal/*` (the endpoints that actually set the rate
-  engine's inputs) require a logged-in Supabase admin session, not any API key, regardless
-  of which key class is presented.
+- **Generated rate-read keys** — read-only. Accepted by `/api/fx/public/current-rate` only.
+  This is the key class external/mobile clients should be issued.
+- **Internal keys** (`INTERNAL_API_KEYS`) — accepted by `/api/fx/rate` and `/api/fx/history`
+  for backward compatibility with trusted internal server callers. `/api/fx/rate` recalculates
+  and stores a new rate, so generated partner keys are deliberately not accepted there.
+- **Admin session cookies** — required for `/api/fx/internal/*` management endpoints and also
+  accepted by the dashboard's authenticated rate views.
 
-Either key is sent the same way, via the `x-api-key` header:
+Generated read keys are sent with `Authorization: Bearer <key>` or `x-api-key`:
 ```bash
-curl -H "x-api-key: your_rate_read_key" https://your-domain.com/api/fx/rate
+curl -H "Authorization: Bearer your_generated_rate_read_key" \
+  https://your-domain.com/api/fx/public/current-rate
 ```
 
 ## Endpoints
 
-### 1. Get Current Rate
+### 1. Get Public Current Rate
+**GET** `/api/fx/public/current-rate`
+
+Returns the latest stored USD to NGN rate for third-party consumers without
+triggering a new rate calculation or any write-side engine behavior.
+
+**Headers:**
+- `Authorization: Bearer <key>` or `x-api-key` (required): A generated
+  rate-read key, or a legacy server-only env read key during migration.
+
+**Response:**
+```json
+{
+  "base": "USD",
+  "quote": "NGN",
+  "rate": 1456.65,
+  "asOf": "2025-12-10T14:30:00.000Z",
+  "stale": false,
+  "source": "fxadmin",
+  "calculationMethod": "full_3layer"
+}
+```
+
+**Status Codes:**
+- `200`: Success
+- `401`: Missing, invalid, or revoked key
+- `429`: Rate limit exceeded. Response includes `Retry-After: 60`.
+- `500`: Database lookup failed
+- `503`: No current cached FX rate is available
+
+**Rate limit:**
+The public current-rate endpoint uses a separate wallet-safe quota keyed by generated key plus caller IP. Default: `600` requests/minute. Override with `FX_PUBLIC_RATE_LIMIT_PER_MINUTE`.
+
+**Example:**
+```bash
+curl -H "Authorization: Bearer your_rate_read_key" \
+  https://your-domain.com/api/fx/public/current-rate
+```
+
+---
+
+### 2. Get Current Rate With Calculation Details
 **GET** `/api/fx/rate`
 
 Returns the current USD → NGN exchange rate with all calculation components.
 
 **Headers:**
-- `x-api-key` (required): A rate-read key, an internal key, or omit if calling with an
-  authenticated dashboard session cookie instead
+- `x-api-key` (required): An internal key, or omit if calling with an authenticated dashboard
+  session cookie instead
 - `x-forwarded-for` (optional): For IP whitelist verification
 
 **Query Parameters:**
@@ -64,7 +106,7 @@ curl -H "x-api-key: your_api_key" https://your-domain.com/api/fx/rate
 
 ---
 
-### 2. Get Rate History
+### 3. Get Rate History
 **GET** `/api/fx/history`
 
 Returns historical rates within a specified time period.
@@ -304,6 +346,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 # API Authentication
 INTERNAL_API_KEYS=key1,key2,key3
 RATE_READ_API_KEYS=wallet_app_key1,other_read_client_key2
+FX_PUBLIC_RATE_LIMIT_PER_MINUTE=600
 CRON_SECRET=your_random_secret_key
 
 # IP Whitelist (optional, leave empty to allow all)

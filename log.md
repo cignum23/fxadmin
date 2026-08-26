@@ -1,5 +1,53 @@
 # fxadmin Implementation Log
 
+## 2026-08-26 - Wallet public current-rate 429 fix
+
+- Fixed the wallet-facing `/api/fx/public/current-rate` limiter after the wallet fallback reached FX Admin but received `429`.
+- Changed the public current-rate limiter to a separate v2 namespace keyed by generated key plus caller IP, with a wallet-safe default of `600` requests/minute and optional `FX_PUBLIC_RATE_LIMIT_PER_MINUTE` override.
+- Added `Retry-After: 60` and `X-RateLimit-Limit` response headers on public current-rate rate-limit responses; successful responses also include `X-RateLimit-Limit`.
+- Updated `docs/FX_RATE_ENGINE_API.md` and `.env.example` with the public current-rate quota behavior.
+- Verification: local generated-key burst retest made 75 sequential calls to `/api/fx/public/current-rate` and received `75` `200` responses with `0` `429`; unauthenticated public current-rate returned `401`; revoked generated key returned `401`. Sandboxed `yarn build` compiled then hit Windows `spawn EPERM`; scoped approved `yarn build` passed with 40 app routes.
+
+## 2026-08-26 - Generated key retest, Aboki baseline, favicon, and Supabase view lint
+
+- Completed the generated rate-read key success retest with a temporary hash-stored key: unauthenticated `/api/fx/public/current-rate` returned `401`; valid generated key returned `200` with USD/NGN `1435`, `source: fxadmin`, `calculationMethod: full_3layer`, and `stale: false`; the same generated key was denied on write-side `/api/fx/rate` with `401`; revoked generated key returned `401`.
+- Fixed the stale public-rate result by making the FX engine persist `external_rate_sources` and `fx_rate_calculations` through the server-only Supabase service-role client and limiting the insert payload to real `fx_rate_calculations` columns.
+- Added Aboki FX into the FX engine baseline collector and confirmed recalculation used multiple baseline sources: `AbokiFX` and `CoinGecko_FX`. Aboki endpoint returned `200` with mid `1402.5`, buy `1400`, sell `1405`, source `abokifx.com`.
+- Added the `/dashboard/abokifx` source table and placed “Aboki FX” directly below Dashboard in the sidebar; desktop topbar FX tab now stays active on the Aboki route.
+- Replaced the browser icon convention route by copying the approved Cignum mark to `app/icon.png` and removing the old custom `app/icon.svg`; build output confirms `/icon.png`.
+- Added unapplied migration `supabase/migrations/fix_security_invoker_fx_views.sql` to set `public.latest_fx_rate` and `public.hourly_fx_rates` to `security_invoker = true` for the Supabase Security Advisor `security_definer_view` alert. No production migration was run.
+- Verification: Impeccable detector reported only the accepted Inter/`Inter Variable` warnings; sandboxed `yarn build` compiled then hit Windows `spawn EPERM`; scoped approved `yarn build` passed with 40 app routes.
+
+## 2026-08-26 - Dropdown menu background hardening
+
+- Fixed invisible/transparent Radix select dropdown menus by enforcing FX Admin popover background and foreground tokens on shared `SelectContent`, `SelectPrimitive.Viewport`, and `SelectItem` surfaces.
+- Added stable `data-fx-select-*` attributes plus global CSS fallbacks so portal-rendered dropdown content stays opaque and readable across calculator and admin forms.
+- Capped long dropdown menus with a scrollable viewport to stop cryptocurrency lists from visually washing over underlying tables.
+- Verification: Impeccable detector on `app/globals.css` and `components/ui/select.tsx` returned only the accepted Inter/`Inter Variable` warnings from the design brief; `yarn build` passed under scoped approval after the sandboxed build compiled successfully but hit Windows `spawn EPERM`.
+- Visual QA note: no local browser-control or Playwright dependency was available in this project from the current tool context, so screenshot QA was not performed.
+
+## 2026-08-26 - Partner read keys, SMTP reset email, dropdown, and Cignum sidebar logo
+
+- Implemented generated read-only partner keys for FX Admin: added `rate_read_api_keys` migration with hash-only storage, protected session-gated management routes, one-time plaintext reveal in Rate Management, revoke support, and read-key verification by `Authorization: Bearer` or `x-api-key`.
+- Added `/api/fx/public/current-rate` for external third-party consumers. It reads the latest stored `fx_rate_calculations` row only and does not trigger write-side rate recalculation; unauthenticated local request returns `401` as expected.
+- Moved forgot-password email sending behind `/api/auth/password-reset/request`, using Supabase admin recovery links and `.env` SMTP settings (`HOST`/`USER`/`PASS` or `SMTP_*`) to send a themed FX Admin email. Added `/reset-password` for the recovery session to set a new password.
+- Fixed dropdown visibility by adding explicit popover background/text token aliases and replaced the sidebar/mobile trend icon with the approved Cignum mark from `public/adaptive-icon.png` using the FX Admin cyan treatment.
+- Updated `.env.example`, `docs/FX_RATE_ENGINE_API.md`, and `README.md` for the generated read-key and SMTP-reset behavior. Added `nodemailer` and `@types/nodemailer` with Yarn.
+- Verification: `yarn build` passed after escalation because the sandboxed build hit Windows `spawn EPERM`; Impeccable detector only reported the accepted Inter/`Inter Variable` warnings required by the design brief. Valid-key/revoked-key live tests remain blocked until the new Supabase migration is applied; no production DB migration was run.
+
+## 2026-08-26 - Next image remote pattern warning fix
+
+- Removed the deprecated `images.domains` entry from `next.config.ts` and kept `images.remotePatterns` for `coin-images.coingecko.com`, which is the Next 16-supported configuration.
+- Verified with `yarn build` under escalation after the sandboxed build hit Windows `spawn EPERM`; build passed and the deprecated `images.domains` warning was gone.
+- Briefly started `yarn dev -p 3011` to check dev output; the deprecated warning did not appear before Next stopped on an existing `.next/dev` lock, likely from another running dev instance. Left that process/lock alone to avoid interrupting active local work.
+
+## 2026-08-25 (cont'd) - Palette alignment hardening
+
+- Implemented Sunny's exact FX Admin palette alignment pass without changing APIs, packages, git state, or external publishing: kept the sidebar on `#001619` with `#c7f8fe` text, main canvas on `#c7f8fe` with `#001619` text, and `#50e8f4` as the single accent.
+- Hardened remaining off-token UI details: added accent-colored text selection, scrollbar, and focus-outline defaults in `app/globals.css`; moved `PriceChart.tsx`'s hardcoded cyan chart values onto chart tokens; replaced the stale `text-blue-600` class in `CryptoTable.tsx`'s commented link with `text-primary`.
+- Fixed a mobile auth-screen overflow found during screenshot QA by making login, forgot-password, and disabled-signup cards/inputs explicitly border-box on narrow viewports.
+- Preserved the existing uncommitted `FX Admin` naming edits in `app/layout.tsx`, `app/dashboard/layout.tsx`, and `components/Sidebar.tsx`.
+
 ## 2026-08-25 (cont'd) - Dependency update, dev-server cleanup, standing build-verification rule
 
 - Sunny asked to kill the process squatting on port 3000 (blocking his own `yarn dev`) and run `yarn install` to align with the already-pinned `next: 16.1.6` in `package.json` (no longer canary). Killed a leftover background dev-server process of mine that had been holding port 3000 this whole session (should have been stopped earlier — noted for next time). `yarn install` initially failed with `EPERM` on the native SWC binary because Sunny's own `yarn dev` process tree had it locked; stopped that tree (all three processes belonged to the same `next dev` run) to let the install complete, then told him to restart `yarn dev` himself.

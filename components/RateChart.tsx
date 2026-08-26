@@ -16,21 +16,24 @@ interface RateChartProps {
 
 export default function RateChart({ data }: RateChartProps) {
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold text-foreground mb-4">
+    <Card className="bg-white/80 p-5 sm:p-6">
+      <h3 className="mb-4 text-lg font-bold text-[var(--color-text-strong)]">
         Rate History (Last 24 Hours)
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+          <CartesianGrid stroke="rgba(0,22,25,0.08)" strokeDasharray="3 3" />
           <XAxis
             dataKey="timestamp"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 12, fill: 'var(--color-text-muted)', fontWeight: 600 }}
             angle={-45}
             textAnchor="end"
             height={80}
           />
-          <YAxis domain={['dataMin - 5', 'dataMax + 5']} />
+          <YAxis
+            domain={['dataMin - 5', 'dataMax + 5']}
+            tick={{ fontSize: 12, fill: 'var(--color-text-muted)', fontWeight: 600 }}
+          />
           <Tooltip
             formatter={(value: unknown) => {
               if (typeof value === 'number') {
@@ -41,7 +44,8 @@ export default function RateChart({ data }: RateChartProps) {
             contentStyle={{
               backgroundColor: 'var(--popover)',
               border: '1px solid var(--border)',
-              borderRadius: '8px'
+              borderRadius: '8px',
+              color: 'var(--foreground)',
             }}
           />
           <Legend />

@@ -1,19 +1,15 @@
-
-
-// app\dashboard\coingecko\page.tsx
-
 "use client";
 
+import Image from "next/image";
 import useSWR from "swr";
 import {
-  fetchCoinGeckoPrices,
-  fetchCoinGeckoChart,
-  fetchUsdToNgnRate,
   CoinGeckoMarketCoin,
+  fetchCoinGeckoChart,
+  fetchCoinGeckoPrices,
+  fetchUsdToNgnRate,
 } from "@/lib/api";
 import PriceChart from "@/components/PriceChart";
-import Image from "next/image";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export default function CoinGeckoPage() {
@@ -29,11 +25,8 @@ export default function CoinGeckoPage() {
 
   const { data: fxRate } = useSWR("fxRate", fetchUsdToNgnRate);
 
-  if (isLoading)
-    return <p className="text-muted-foreground">Loading CoinGecko data…</p>;
-
-  if (error || !coins)
-    return <p className="text-destructive">Failed to load CoinGecko data.</p>;
+  if (isLoading) return <p className="font-medium text-muted-foreground">Loading CoinGecko data...</p>;
+  if (error || !coins) return <p className="font-semibold text-destructive">Failed to load CoinGecko data.</p>;
 
   const labels =
     chart?.prices.map(([ts]) =>
@@ -43,73 +36,57 @@ export default function CoinGeckoPage() {
   const dataPoints = chart?.prices.map(([, price]) => price) || [];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="fx-page space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-primary">
-          CoinGecko Markets
-        </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="fx-label mb-2">Market Source</p>
+        <h1 className="text-3xl font-bold text-[var(--color-text-strong)]">CoinGecko Markets</h1>
+        <p className="mt-1 font-medium text-muted-foreground">
           Top 100 cryptocurrency prices powered by CoinGecko.
         </p>
       </div>
 
-      {/* Table */}
       <Card>
         <CardHeader>
           <CardTitle>Top 100 Coins</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-xl border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
-            <table className="min-w-full bg-card text-sm text-foreground">
-              <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
-                <tr className="border-b border-border">
-                  <th className="p-3 font-medium text-left">
-                    #
-                  </th>
-                  <th className="p-3 font-medium text-left">
-                    Coin
-                  </th>
-                  <th className="p-3 font-medium text-left">
-                    Price (USD)
-                  </th>
-                  <th className="p-3 font-medium text-left">
-                    Price (NGN)
-                  </th>
-                  <th className="p-3 font-medium text-left">
-                    24h %
-                  </th>
+          <div className="fx-table-shell">
+            <table className="fx-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Coin</th>
+                  <th>Price (USD)</th>
+                  <th>Price (NGN)</th>
+                  <th>24h %</th>
                 </tr>
               </thead>
               <tbody>
                 {coins.map((coin: CoinGeckoMarketCoin) => (
-                  <tr
-                    key={coin.id}
-                    className="text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]"
-                  >
-                    <td className="p-3">{coin.market_cap_rank}</td>
-                    <td className="p-3 flex items-center gap-3">
-                      <Image
-                        src={coin.image}
-                        alt={coin.name}
-                        width={20}
-                        height={20}
-                        className="rounded-full bg-muted p-0.5"
-                      />
-                      {coin.name} ({coin.symbol.toUpperCase()})
+                  <tr key={coin.id}>
+                    <td className="font-semibold text-muted-foreground">{coin.market_cap_rank}</td>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={coin.image}
+                          alt={coin.name}
+                          width={20}
+                          height={20}
+                          className="rounded-full bg-muted p-0.5"
+                        />
+                        <span className="font-semibold">
+                          {coin.name} ({coin.symbol.toUpperCase()})
+                        </span>
+                      </div>
                     </td>
-                    <td className="p-3 text-foreground font-medium">
-                      ${coin.current_price.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-foreground font-medium">
-                      {fxRate ? `₦${Math.round(coin.current_price * fxRate).toLocaleString()}` : "Loading..."}
+                    <td className="font-semibold">${coin.current_price.toLocaleString()}</td>
+                    <td className="font-semibold">
+                      {fxRate ? `\u20A6${Math.round(coin.current_price * fxRate).toLocaleString()}` : "Loading..."}
                     </td>
                     <td
                       className={cn(
-                        "p-3 font-semibold",
-                        coin.price_change_percentage_24h >= 0
-                          ? "text-success"
-                          : "text-danger"
+                        "font-bold",
+                        coin.price_change_percentage_24h >= 0 ? "text-success" : "text-danger"
                       )}
                     >
                       {coin.price_change_percentage_24h?.toFixed(2)}%

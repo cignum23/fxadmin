@@ -173,23 +173,24 @@ export default function CalculatorPage() {
   // Loading state
   if (!geckoCoins || ratesLoading) {
     return (
-      <main className="p-6 bg-bg text-foreground">
-        <h1 className="text-2xl font-bold mb-4 text-primary">Calculator</h1>
-        <p className="text-muted">Loading crypto data…</p>
+      <main className="fx-page text-foreground">
+        <h1 className="mb-4 text-3xl font-bold text-[var(--color-text-strong)]">Calculator</h1>
+        <p className="font-medium text-muted-foreground">Loading crypto data...</p>
       </main>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="fx-page space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-primary ">Crypto Calculator</h1>
-        <p className="text-muted-foreground mt-1">Multi-platform currency conversion</p>
+        <p className="fx-label mb-2">Conversion Desk</p>
+        <h1 className="text-3xl font-bold text-[var(--color-text-strong)]">Crypto Calculator</h1>
+        <p className="mt-1 font-medium text-muted-foreground">Multi-platform currency conversion</p>
       </div>
 
       {/* Controls */}
-      <Card className="bg-card border-border">
+      <Card>
         <CardContent className="p-6">
           <div className="grid gap-6 md:grid-cols-4">
             <div className="space-y-2">
@@ -200,14 +201,14 @@ export default function CalculatorPage() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Enter amount"
-                className="h-12 bg-muted border-border font-mono"
+                className="h-12 font-semibold"
               />
             </div>
 
             <div className="space-y-2">
               <Label>Currency</Label>
               <Select value={currency} onValueChange={(v) => setCurrency(v as "USD" | "NGN")}>
-                <SelectTrigger className="h-12 border-border">
+                <SelectTrigger className="h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -220,7 +221,7 @@ export default function CalculatorPage() {
             <div className="space-y-2">
               <Label>Platform</Label>
               <Select value={platformId} onValueChange={(value) => setPlatformId(value as CryptoPlatformId)}>
-                <SelectTrigger className="h-12 border-border">
+                <SelectTrigger className="h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -236,7 +237,7 @@ export default function CalculatorPage() {
             <div className="space-y-2">
               <Label>Cryptocurrency</Label>
               <Select value={selectedCoinSymbol} onValueChange={setSelectedCoinSymbol}>
-                <SelectTrigger className="h-12 bg-muted border-border">
+                <SelectTrigger className="h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,11 +253,11 @@ export default function CalculatorPage() {
         </CardContent>
       </Card>
 
-      {/* ✅ Selected Platform Summary */}
+      {/* Selected Platform Summary */}
       {selectedCrypto && calculations.platformRate > 0 && (
-        <Card className="bg-linear-to-br from-primary/10 to-primary/5 border-primary/20">
+        <Card className="bg-[color-mix(in_srgb,var(--color-surface)_86%,white)]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg font-bold">
               <Calculator className="w-5 h-5 text-primary" />
               {CRYPTO_PLATFORMS.find(p => p.id === platformId)?.name || "Calculator"}
             </CardTitle>
@@ -264,20 +265,20 @@ export default function CalculatorPage() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <p className="text-sm text-muted-foreground">USD Equivalent</p>
-                <p className="text-2xl font-bold font-mono">
+                <p className="text-sm font-bold uppercase tracking-[0.08em] text-muted-foreground">USD Equivalent</p>
+                <p className="text-2xl font-extrabold text-[var(--color-text-strong)]">
                   ${calculations.usd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Crypto Amount</p>
-                <p className="text-2xl font-bold font-mono">
+                <p className="text-sm font-bold uppercase tracking-[0.08em] text-muted-foreground">Crypto Amount</p>
+                <p className="text-2xl font-extrabold text-[var(--color-text-strong)]">
                   {calculations.crypto.toFixed(6)} {selectedCrypto.symbol}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">NGN Value</p>
-                <p className="text-2xl font-bold font-mono">
+                <p className="text-sm font-bold uppercase tracking-[0.08em] text-muted-foreground">NGN Value</p>
+                <p className="text-2xl font-extrabold text-primary">
                   ₦{calculations.ngn.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
@@ -286,33 +287,33 @@ export default function CalculatorPage() {
             <div className="mt-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-success"></div>
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
                   {isUsingLive ? "Live rate" : "Last rate (DB)"}
                 </span>
               </div>    </div>
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="mt-4 text-sm font-semibold text-muted-foreground">
               {CRYPTO_PLATFORMS.find(p => p.id === platformId)?.name} Rate: ₦{calculations.platformRate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: platformId === "abokifx" ? 4 : 2 })} / USD
             </p>
 
             {platformId === "abokifx" && abokiDetails && (abokiDetails.buy_rate || abokiDetails.sell_rate) && (
               <div className="mt-4 grid gap-2 md:grid-cols-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Buy</p>
-                  <p className="font-mono text-sm">₦{Number(abokiDetails.buy_rate).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Buy</p>
+                  <p className="text-sm font-semibold">₦{Number(abokiDetails.buy_rate).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Sell</p>
-                  <p className="font-mono text-sm">₦{Number(abokiDetails.sell_rate).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Sell</p>
+                  <p className="text-sm font-semibold">₦{Number(abokiDetails.sell_rate).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Mid</p>
-                  <p className="font-mono text-sm">₦{Number(abokiDetails.mid_rate ?? abokiDetails.rate ?? 0).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Mid</p>
+                  <p className="text-sm font-semibold">₦{Number(abokiDetails.mid_rate ?? abokiDetails.rate ?? 0).toLocaleString("en-US", { maximumFractionDigits: 4 })}</p>
                 </div>
               </div>
             )}
 
             {platformId === "abokifx" && abokiDetails?.source && (
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">
                 Source: {String(abokiDetails.source)}
               </p>
             )}
@@ -320,29 +321,29 @@ export default function CalculatorPage() {
         </Card>
       )}
 
-      {/* ✅ Results Table */}
-      <Card className="bg-card border-border">
+      {/* Results Table */}
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg font-bold">
             <ArrowRightLeft className="w-5 h-5" />
             Platform Details
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-xl border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
-            <table className="min-w-full bg-card text-sm text-foreground">
-              <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
-                <tr className="border-b border-border">
-                  <th className="p-3 font-medium text-left">
+          <div className="fx-table-shell">
+            <table className="fx-table">
+              <thead>
+                <tr>
+                  <th>
                     Platform
                   </th>
-                  <th className="p-3 font-medium text-right">
+                  <th className="text-right">
                     USD
                   </th>
-                  <th className="p-3 font-medium text-right">
+                  <th className="text-right">
                     Crypto ({selectedCrypto?.symbol || "N/A"})
                   </th>
-                  <th className="p-3 font-medium text-right">
+                  <th className="text-right">
                     NGN
                   </th>
                 </tr>
@@ -368,27 +369,27 @@ export default function CalculatorPage() {
                     <tr
                       key={platform.id}
                       className={cn(
-                        "text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]",
+                        "text-sm",
                         isSelected && "bg-primary/5"
                       )}
                     >
-                      <td className="p-3">
-                        <p className="font-medium flex items-center gap-2">
+                      <td>
+                        <p className="flex items-center gap-2 font-semibold">
                           {platform.name}
                           {rowLive > 0 ? (
-                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-success/10 text-success border border-success/20">Live</span>
+                            <span className="rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success">Live</span>
                           ) : (
-                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground border border-border">Last</span>
+                            <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">Last</span>
                           )}
                         </p>
                       </td>
-                      <td className="p-3 text-right font-mono text-sm text-foreground font-medium">
+                      <td className="text-right text-sm font-semibold text-foreground">
                         ${usdAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="p-3 text-right font-mono text-sm text-foreground font-medium">
+                      <td className="text-right text-sm font-semibold text-foreground">
                         {cryptoAmount.toFixed(6)}
                       </td>
-                      <td className="p-3 text-right font-mono text-sm text-foreground font-medium">
+                      <td className="text-right text-sm font-semibold text-foreground">
                         ₦{ngnAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </td>
                     </tr>

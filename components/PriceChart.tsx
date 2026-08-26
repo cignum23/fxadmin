@@ -1,6 +1,3 @@
-
-
-//components\PriceChart.tsx
 "use client";
 
 import {
@@ -24,8 +21,8 @@ type Props = {
 
 export default function PriceChart({ labels, dataPoints, coin }: Props) {
   return (
-    <div className="mt-8 bg-card border border-border p-4 rounded-lg shadow-card">
-      <h3 className="text-lg font-semibold mb-2 text-foreground">{coin} 7-Day Price Chart</h3>
+    <div className="mt-8 rounded-xl border border-border bg-white/80 p-5 shadow-card">
+      <h3 className="mb-4 text-lg font-bold text-[var(--color-text-strong)]">{coin} 7-Day Price Chart</h3>
       <Line
         data={{
           labels,
@@ -33,15 +30,33 @@ export default function PriceChart({ labels, dataPoints, coin }: Props) {
             {
               label: `${coin} Price`,
               data: dataPoints,
-              borderColor: "#50e8f4",
-              backgroundColor: "rgba(80, 232, 244, 0.18)",
+              borderColor: "var(--chart-usd-fiat)",
+              backgroundColor: "var(--chart-usd-fiat-soft)",
               tension: 0.4,
             },
           ],
         }}
         options={{
           responsive: true,
-          scales: { y: { beginAtZero: false } },
+          plugins: {
+            legend: {
+              labels: {
+                color: "var(--color-text-muted)",
+                font: { weight: 600 },
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: "var(--color-text-muted)", font: { weight: 600 } },
+              grid: { color: "rgba(0,22,25,0.08)" },
+            },
+            y: {
+              beginAtZero: false,
+              ticks: { color: "var(--color-text-muted)", font: { weight: 600 } },
+              grid: { color: "rgba(0,22,25,0.08)" },
+            },
+          },
         }}
       />
     </div>

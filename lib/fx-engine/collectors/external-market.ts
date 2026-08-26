@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ExternalRate } from '../types';
+import { fetchAbokiFxRate } from '@/lib/api/abokiFx';
 
 export async function fetchCryptoCompareRate(): Promise<ExternalRate> {
   try {
@@ -86,6 +87,27 @@ export async function fetchCoinMarketCapRate(): Promise<ExternalRate> {
   }
 }
 
+export async function fetchAbokiFXRate(): Promise<ExternalRate> {
+  try {
+    const result = await fetchAbokiFxRate({ mode: 'mid' });
+    const rate = Number(result.rate);
+
+    if (!Number.isFinite(rate) || rate <= 0) {
+      throw new Error('AbokiFX rate unavailable');
+    }
+
+    return {
+      source: 'AbokiFX',
+      usd_ngn_rate: rate,
+      timestamp: result.timestamp ?? result.updated_at,
+      status: 'success'
+    };
+  } catch (error) {
+    console.error('AbokiFX fetch failed:', error);
+    throw new Error('AbokiFX unavailable');
+  }
+}
+
 export async function fetchBinanceRate(): Promise<ExternalRate> {
   try {
     const response = await axios.get(
@@ -141,6 +163,7 @@ export async function fetchBinanceUSDCRate(): Promise<ExternalRate> {
 
 export async function collectExternalRates(): Promise<ExternalRate[]> {
   const sources = [
+    fetchAbokiFXRate(),
     fetchCryptoCompareRate(),
     fetchCoinMarketCapRate(),
     fetchBinanceRate(),

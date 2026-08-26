@@ -1,4 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getClientIp } from '@/lib/fx-engine/utils/rate-limiter';
+import { getBearerOrApiKey, verifyStoredRateReadKey } from '@/lib/fx-engine/utils/rate-read-keys';
 
 export function verifyApiKey(key: string | null | undefined): boolean {
   if (!key) return false;
@@ -45,7 +47,9 @@ export async function verifyApiKeyOrSession(request: Request): Promise<boolean> 
  * for backward compatibility), or a logged-in dashboard session.
  */
 export async function verifyRateReadKeyOrSession(request: Request): Promise<boolean> {
-  if (verifyRateReadKey(request.headers.get('x-api-key'))) {
+  const requestKey = getBearerOrApiKey(request);
+  const storedKey = await verifyStoredRateReadKey(requestKey, getClientIp(request));
+  if (storedKey.valid || verifyRateReadKey(requestKey)) {
     return true;
   }
   return verifyApiKeyOrSession(request);

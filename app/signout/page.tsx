@@ -1,7 +1,6 @@
-// app/signout/page.tsx
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
@@ -21,9 +20,9 @@ export default function SignOutPage() {
   }, []);
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-background text-foreground">
-      <div className="text-center">
-        <p className="mb-2">Signing out…</p>
+    <main className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
+      <div className="rounded-2xl border border-border bg-white/80 p-6 text-center shadow-card">
+        <p className="mb-2 font-semibold text-[var(--color-text-strong)]">Signing out...</p>
       </div>
     </main>
   );

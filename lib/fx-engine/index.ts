@@ -6,7 +6,7 @@ import { calculateFinalRate } from './calculators/final-rate';
 import { getFallbackRate } from './utils/fallback';
 import { logRateCalculation } from './utils/logger';
 import { FinalRate, ExternalRate } from './types';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 // Save external rates to database for persistence and fallback
 async function saveExternalRatesToDatabase(rates: ExternalRate[]): Promise<void> {
@@ -21,7 +21,7 @@ async function saveExternalRatesToDatabase(rates: ExternalRate[]): Promise<void>
       timestamp: new Date().toISOString()
     }));
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('external_rate_sources')
       .insert(externalRateRecords);
 
@@ -147,13 +147,19 @@ export async function calculateFinalFxRate(): Promise<FinalRate> {
 
     // Step 6: Store in database with raw sources
     const startTime = Date.now();
-    const { raw_sources: _unused, ...rateData } = finalRate;
     const rateRecord = {
-      ...rateData,
+      timestamp: finalRate.timestamp,
+      baseline_rate: finalRate.baseline_rate,
+      crypto_implied_rate: finalRate.crypto_implied_rate,
+      crypto_premium: finalRate.crypto_premium,
+      liquidity_spread: finalRate.liquidity_spread,
+      desk_spread: finalRate.desk_spread,
+      final_usd_ngn_rate: finalRate.final_usd_ngn_rate,
+      calculation_method: finalRate.calculation_method,
       raw_sources: externalRates
     };
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('fx_rate_calculations')
       .insert(rateRecord);
 

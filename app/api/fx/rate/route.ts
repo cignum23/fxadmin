@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { calculateFinalFxRate } from '@/lib/fx-engine';
-import { verifyRateReadKeyOrSession, verifyIPWhitelist } from '@/lib/fx-engine/utils/auth';
+import { verifyApiKeyOrSession, verifyIPWhitelist } from '@/lib/fx-engine/utils/auth';
 import { checkRateLimit, getClientIp } from '@/lib/fx-engine/utils/rate-limiter';
 
 export async function GET(request: Request) {
   try {
-    // Verify a rate-read key, an internal key, or an active dashboard session
-    if (!(await verifyRateReadKeyOrSession(request))) {
+    // This route recalculates and persists the rate, so generated read-only keys are not accepted here.
+    if (!(await verifyApiKeyOrSession(request))) {
       return NextResponse.json(
         { error: 'Unauthorized - Invalid API key or session' },
         { status: 401 }

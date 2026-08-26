@@ -1,5 +1,3 @@
-// //components\Sidebar.tsx
-
 "use client"
 
 import Link from "next/link"
@@ -8,11 +6,11 @@ import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  TrendingUp,
   LogOut,
   X,
   ChevronRight,
   BarChart,
+  Banknote,
   GitCompare,
   Landmark,
   CircleDollarSign,
@@ -23,6 +21,7 @@ import {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/abokifx", label: "Aboki FX", icon: Banknote },
   { href: "/dashboard/coingecko", label: "CoinGecko", icon: CircleDollarSign },
   { href: "/dashboard/coinmarketcap", label: "CoinMarketCap", icon: BarChart },
   { href: "/dashboard/cryptocompare", label: "CryptoCompare", icon: GitCompare },
@@ -39,57 +38,60 @@ interface SidebarProps {
 
 export default function Sidebar({ sidebarOpen, closeSidebar, pathname }: SidebarProps) {
   const router = useRouter()
-const { signout } = useAuth();
+  const { signout } = useAuth();
 
-const handleLogout = async () => {
-  await signout();
-  router.push("/login");
-};
+  const handleLogout = async () => {
+    await signout();
+    router.push("/login");
+  };
 
 
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-50 h-full w-72 bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:translate-x-0",
+        "fixed top-0 left-0 z-50 h-full w-[var(--sidebar-width)] bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
       )}
     >
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 ">
+        <div className="h-20 flex items-center justify-between px-6">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-lg bg-transparent flex items-center justify-center">
+              <span className="cignum-mark h-9 w-9" aria-hidden="true" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">Crypto Monitor</span>
+            <span className="text-xl font-bold tracking-normal text-sidebar-primary">FX Admin</span>
           </div>
 
           <button
             onClick={closeSidebar}
-            className="lg:hidden p-2 -mr-2 text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            className="lg:hidden p-2 -mr-2 text-sidebar-foreground hover:text-sidebar-primary"
+            aria-label="Close navigation"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 px-4 py-5 space-y-3">
           {navItems.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || (item.href === "/dashboard" && pathname === "/dashboard")
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeSidebar}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  "relative flex min-h-14 items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-all",
                   isActive
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground opacity-70 hover:opacity-100 hover:bg-sidebar-accent",
+                    ? "bg-sidebar-accent text-sidebar-primary shadow-[inset_-3px_0_0_var(--sidebar-primary)]"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-primary",
                 )}
               >
-                <item.icon className="w-5 h-5" />
-                {item.label}
+                <span className="grid h-10 w-10 shrink-0 place-items-center">
+                  <item.icon className="w-5 h-5" />
+                </span>
+                <span>{item.label}</span>
                 {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
               </Link>
             )
@@ -97,13 +99,15 @@ const handleLogout = async () => {
         </nav>
 
         {/* Logout */}
-        <div className="p-4 ">
+        <div className="p-4">
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full justify-start gap-3 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            className="w-full justify-start gap-3 text-base font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-primary"
           >
-            <LogOut className="w-5 h-5" />
+            <span className="grid h-10 w-10 place-items-center">
+              <LogOut className="w-5 h-5" />
+            </span>
             Sign out
           </Button>
         </div>

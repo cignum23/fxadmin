@@ -1,14 +1,18 @@
-
-
-
-
-//app\dashboard\coinmarketcap\page.tsx
-
-
 "use client";
 
 import useSWR from "swr";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+type Coin = {
+  id: string;
+  name: string;
+  symbol: string;
+  quote: {
+    USD: {
+      price: number;
+    };
+  };
+};
 
 export default function CoinMarketCapPage() {
   const { data: coins, isLoading, error } = useSWR(
@@ -16,30 +20,20 @@ export default function CoinMarketCapPage() {
     async () => {
       const res = await fetch("/api/coinmarketcap");
       if (!res.ok) throw new Error("Failed");
-      return res.json();
+      return res.json() as Promise<Coin[]>;
     },
     { refreshInterval: 30000 }
   );
 
-  if (isLoading) return <p className="text-muted-foreground">Loading...</p>;
-  
-  type Coin = {
-    id: string;
-    name: string;
-    symbol: string;
-    quote: {
-      USD: {
-        price: number;
-      };
-    };
-  };  if (error || !coins)
-    return <p className="text-destructive">Failed to load CoinMarketCap data.</p>;
+  if (isLoading) return <p className="font-medium text-muted-foreground">Loading CoinMarketCap data...</p>;
+  if (error || !coins) return <p className="font-semibold text-destructive">Failed to load CoinMarketCap data.</p>;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight text-primary">
-        CoinMarketCap Prices
-      </h1>
+    <div className="fx-page space-y-6">
+      <div>
+        <p className="fx-label mb-2">Market Source</p>
+        <h1 className="text-3xl font-bold text-[var(--color-text-strong)]">CoinMarketCap Prices</h1>
+      </div>
 
       <Card>
         <CardHeader>
@@ -47,31 +41,22 @@ export default function CoinMarketCapPage() {
         </CardHeader>
 
         <CardContent>
-          <div className="overflow-x-auto rounded-xl border border-[color-mix(in_srgb,var(--border)_55%,transparent)]">
-            <table className="min-w-full bg-card text-sm text-foreground">
-              <thead className="bg-header text-xs uppercase tracking-wide text-mutedForeground">
-                <tr className="border-b border-border">
-                  <th className="p-3 font-medium text-left">
-                    Name
-                  </th>
-                  <th className="p-3 font-medium text-left">
-                    Symbol
-                  </th>
-                  <th className="p-3 font-medium text-left">
-                    Price (USD)
-                  </th>
+          <div className="fx-table-shell">
+            <table className="fx-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Symbol</th>
+                  <th>Price (USD)</th>
                 </tr>
               </thead>
 
               <tbody>
-                {coins.map((coin: Coin) => (
-                  <tr
-                    key={coin.id}
-                    className="text-sm transition border-b border-border hover:bg-cardHover odd:bg-card even:bg-[color-mix(in_srgb,var(--card)_82%,var(--cardHover))]"
-                  >
-                    <td className="p-3">{coin.name}</td>
-                    <td className="p-3 uppercase">{coin.symbol}</td>
-                    <td className="p-3 text-foreground font-medium">
+                {coins.map((coin) => (
+                  <tr key={coin.id}>
+                    <td className="font-semibold">{coin.name}</td>
+                    <td className="font-semibold uppercase text-muted-foreground">{coin.symbol}</td>
+                    <td className="font-semibold">
                       ${coin.quote.USD.price.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}

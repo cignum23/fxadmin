@@ -80,6 +80,14 @@ This project is a Next.js + Tailwind CSS admin dashboard for FX rate computation
 
 ## Operational Notes
 
+- Partner API access: Rate Management now creates revocable, hash-only read
+  keys for `/api/fx/public/current-rate`. Generated key plaintext is revealed
+  once, never stored, and is separate from admin/session access.
+- Password reset: Forgot-password requests now use server-side SMTP settings
+  from `.env` to send a themed FX Admin recovery email.
+- Dashboard auth: `/dashboard` and `/api/fx/internal/*` remain protected by a
+  logged-in Supabase admin session, not public API keys.
+
 - Live vs DB behavior: Calculator and dashboard prefer live rates per platform when possible; otherwise, they fall back to DB to ensure data is always shown.
 - Logging: Vendors endpoint and platform-rates API include minimal logs to trace failures and fallbacks.
 - UI Consistency: All platform dashboards use unified Card/table components and muted states for loading/error.

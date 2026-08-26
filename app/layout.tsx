@@ -1,10 +1,11 @@
 // app/layout.tsx
 import "./globals.css";
+import "@fontsource-variable/inter";
 import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata = {
-  title: "Crypto Monitor",
-  description: "Live crypto price tracking in USD and NGN",
+  title: "FX Admin",
+  description: "Internal USD/NGN FX rate engine and crypto market administration.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

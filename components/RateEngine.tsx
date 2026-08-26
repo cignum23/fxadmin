@@ -1,14 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-// Dynamically import chart to prevent hydration issues
 const Chart = dynamic(() => import('./RateChart'), {
   ssr: false,
-  loading: () => <div className="h-80 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">Loading chart...</div>
+  loading: () => (
+    <div className="flex h-80 items-center justify-center rounded-xl border border-border bg-white text-muted-foreground">
+      Loading chart...
+    </div>
+  ),
 });
 
 interface FinalRate {
@@ -32,6 +37,23 @@ interface HistoryData {
   crypto_implied_rate: number | null;
 }
 
+const formatNaira = (value: number) => `\u20A6${value.toFixed(2)}`;
+
+function DetailRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-t border-[rgba(0,22,25,0.07)] py-4 first:border-t-0">
+      <span className="text-base font-medium text-foreground">{label}</span>
+      <div className="text-right text-base font-bold text-[var(--color-text-strong)]">{children}</div>
+    </div>
+  );
+}
+
 export function RateEngine() {
   const [currentRate, setCurrentRate] = useState<FinalRate | null>(null);
   const [history, setHistory] = useState<HistoryData[]>([]);
@@ -39,7 +61,7 @@ export function RateEngine() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Session cookie authorizes these calls — no API key needed once logged in.
+  // Logged-in sessions authorize these calls through the cookie-backed API.
   const fetchRate = async () => {
     try {
       const response = await fetch('/api/fx/rate');
@@ -80,7 +102,7 @@ export function RateEngine() {
           timestamp: new Date(String(item.timestamp)).toLocaleTimeString(),
           final_usd_ngn_rate: Number(item.final_usd_ngn_rate),
           baseline_rate: Number(item.baseline_rate),
-          crypto_implied_rate: item.crypto_implied_rate ? Number(item.crypto_implied_rate) : null
+          crypto_implied_rate: item.crypto_implied_rate ? Number(item.crypto_implied_rate) : null,
         }))
       );
     } catch (err) {
@@ -92,10 +114,6 @@ export function RateEngine() {
   const refreshRate = async () => {
     setRefreshing(true);
     try {
-      // calculateFinalFxRate() recomputes and persists on every /api/fx/rate
-      // call, so "refresh" just means fetching again — no separate
-      // /api/cron/update-rates call needed (that endpoint checks CRON_SECRET,
-      // a different secret entirely, so calling it from here never worked).
       await fetchRate();
       await fetchHistory();
     } catch (err) {
@@ -111,121 +129,152 @@ export function RateEngine() {
 
     const interval = setInterval(() => {
       fetchRate();
-    }, 30000); // Refresh every 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <div className="w-full space-y-6 p-6 text-foreground">
-      {/* Error Alert */}
-      {error && (
-        <Card className="p-4 bg-danger/10 border border-danger/20">
-          <p className="text-danger font-medium">Error: {error}</p>
-        </Card>
-      )}
+  if (error) {
+    return (
+      <Card className="p-5 bg-danger/10 border-danger/25">
+        <p className="font-semibold text-danger">Error: {error}</p>
+      </Card>
+    );
+  }
 
-      {loading ? (
-        <Card className="p-8 text-center text-muted-foreground">Loading current rate…</Card>
-      ) : !currentRate ? (
-        <Card className="p-8 text-center text-muted-foreground">No rate available yet.</Card>
-      ) : (
-        <>
-          {/* Current Rate Display */}
-          <Card className="p-8 bg-primary/5 border border-primary/20">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+  if (loading) {
+    return (
+      <Card className="p-10 text-center text-muted-foreground">
+        Loading current rate...
+      </Card>
+    );
+  }
+
+  if (!currentRate) {
+    return (
+      <Card className="p-10 text-center text-muted-foreground">
+        No rate available yet.
+      </Card>
+    );
+  }
+
+  const rate = currentRate.final_usd_ngn_rate ?? 0;
+  const baselineSources = currentRate.baseline_sources ?? [];
+
+  return (
+    <section className="space-y-6 text-foreground">
+      <Card className="overflow-hidden rounded-2xl border-[rgba(0,22,25,0.12)] bg-[color-mix(in_srgb,var(--color-surface)_86%,white)] p-0">
+        <div className="grid min-h-[430px] gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(320px,0.75fr)_minmax(420px,1fr)] lg:p-10">
+          <div className="flex min-h-[350px] flex-col justify-between">
+            <div className="space-y-6">
+              <p className="fx-label">Current Rate</p>
               <div className="space-y-4">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Current Rate
-                </h2>
-                <div className="text-5xl font-bold text-primary">
-                  ₦{(currentRate.final_usd_ngn_rate ?? 0).toFixed(2)}
+                <div className="fx-value text-6xl sm:text-7xl">
+                  {formatNaira(rate)}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  1 USD = {(currentRate.final_usd_ngn_rate ?? 0).toFixed(2)} NGN
+                <p className="text-lg font-semibold text-[var(--color-text-strong)]">
+                  1 USD = {rate.toFixed(2)} NGN
                 </p>
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="text-base font-medium text-muted-foreground">
                   Updated: {new Date(currentRate.timestamp).toLocaleString()}
                 </p>
               </div>
-
-              <div className="bg-card rounded-lg p-6 space-y-3 border border-border">
-                <h3 className="font-semibold text-foreground mb-4">Rate Components & Calculation Details</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Baseline Rate:</span>
-                    <span className="font-semibold text-foreground">
-                      ₦{(currentRate.baseline_rate ?? 0).toFixed(2)}
-                    </span>
-                  </div>
-                  {currentRate.baseline_sources && currentRate.baseline_sources.length > 0 && (
-                    <div className="text-xs text-muted-foreground pl-2 border-l-2 border-border">
-                      From {currentRate.baseline_sources.length} source{currentRate.baseline_sources.length !== 1 ? 's' : ''}: {currentRate.baseline_sources.join(', ')}
-                    </div>
-                  )}
-                  {currentRate.crypto_implied_rate && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Crypto Implied:</span>
-                      <span className="font-semibold text-foreground">
-                        ₦{(currentRate.crypto_implied_rate ?? 0).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-                  {(currentRate.crypto_premium ?? 0) !== 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Crypto Premium:</span>
-                      <span className={`font-semibold ${(currentRate.crypto_premium ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
-                        +₦{((currentRate.crypto_premium ?? 0).toFixed(2))}
-                      </span>
-                    </div>
-                  )}
-                  {(currentRate.liquidity_spread_raw ?? 0) !== 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Liquidity Spread:</span>
-                      <div className="text-right">
-                        <div className="font-semibold text-muted-foreground">Raw: ₦{(currentRate.liquidity_spread_raw ?? 0).toFixed(2)}</div>
-                        <div className={`font-semibold ${(currentRate.liquidity_spread ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
-                          Clamped: +₦{((currentRate.liquidity_spread ?? 0).toFixed(2))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {(currentRate.desk_spread ?? 0) !== 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Desk Spread:</span>
-                      <span className={`font-semibold ${(currentRate.desk_spread ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
-                        +₦{((currentRate.desk_spread ?? 0).toFixed(2))}
-                      </span>
-                    </div>
-                  )}
-                  {currentRate.otc_status && (
-                    <div className="text-xs text-muted-foreground pt-2 border-t border-border">
-                      <span className="font-semibold">OTC Desk Status:</span> {currentRate.otc_status}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
 
-            <div className="mt-6 flex gap-3">
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Button
                 onClick={refreshRate}
                 disabled={refreshing}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground px-6 py-2 rounded-lg"
+                className="h-11 min-w-44 rounded-md px-6 text-sm font-extrabold uppercase tracking-[0.08em]"
               >
                 {refreshing ? 'Refreshing...' : 'Refresh Rate'}
               </Button>
-              <p className="text-xs text-muted-foreground self-center">
-                Method: {currentRate.calculation_method}
-              </p>
+              <div className="flex items-center gap-3 text-base font-medium text-muted-foreground">
+                <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                <span>Method: {currentRate.calculation_method}</span>
+              </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Chart */}
-          {history.length > 0 && <Chart data={history} />}
-        </>
-      )}
-    </div>
+          <div className="fx-inner-panel p-5 sm:p-7">
+            <h2 className="border-b border-[rgba(0,22,25,0.07)] pb-6 text-2xl font-bold text-[var(--color-text-strong)]">
+              Rate Components & Calculation Details
+            </h2>
+
+            <div className="mt-6">
+              <DetailRow label="Baseline Rate:">
+                {formatNaira(currentRate.baseline_rate ?? 0)}
+              </DetailRow>
+
+              {baselineSources.length > 0 && (
+                <div className="mb-4 border-l border-[rgba(80,232,244,0.55)] px-4 py-2 text-base font-medium text-muted-foreground">
+                  From {baselineSources.length} source{baselineSources.length !== 1 ? 's' : ''}: {baselineSources.join(', ')}
+                </div>
+              )}
+
+              {currentRate.crypto_implied_rate && (
+                <DetailRow label="Crypto Implied:">
+                  {formatNaira(currentRate.crypto_implied_rate ?? 0)}
+                </DetailRow>
+              )}
+
+              {(currentRate.crypto_premium ?? 0) !== 0 && (
+                <DetailRow label="Crypto Premium:">
+                  <span
+                    className={cn(
+                      (currentRate.crypto_premium ?? 0) >= 0 ? 'text-success' : 'text-danger'
+                    )}
+                  >
+                    {(currentRate.crypto_premium ?? 0) >= 0 ? '+' : '-'}
+                    {formatNaira(Math.abs(currentRate.crypto_premium ?? 0))}
+                  </span>
+                </DetailRow>
+              )}
+
+              {(currentRate.liquidity_spread_raw ?? 0) !== 0 && (
+                <DetailRow label="Liquidity Spread:">
+                  <div className="space-y-1">
+                    <div className="text-danger">
+                      Raw: {formatNaira(currentRate.liquidity_spread_raw ?? 0)}
+                    </div>
+                    <div
+                      className={cn(
+                        (currentRate.liquidity_spread ?? 0) >= 0 ? 'text-[var(--color-text-strong)]' : 'text-danger'
+                      )}
+                    >
+                      Clamped: {(currentRate.liquidity_spread ?? 0) >= 0 ? '+' : '-'}
+                      {formatNaira(Math.abs(currentRate.liquidity_spread ?? 0))}
+                    </div>
+                  </div>
+                </DetailRow>
+              )}
+
+              {(currentRate.desk_spread ?? 0) !== 0 && (
+                <DetailRow label="Desk Spread:">
+                  <span
+                    className={cn(
+                      (currentRate.desk_spread ?? 0) >= 0 ? 'text-success' : 'text-danger'
+                    )}
+                  >
+                    {(currentRate.desk_spread ?? 0) >= 0 ? '+' : '-'}
+                    {formatNaira(Math.abs(currentRate.desk_spread ?? 0))}
+                  </span>
+                </DetailRow>
+              )}
+
+              {currentRate.otc_status && (
+                <div className="flex items-center gap-3 border-t border-[rgba(0,22,25,0.07)] py-4 text-base font-medium">
+                  <span className="text-[var(--color-text-strong)]">OTC Desk Status:</span>
+                  <span className="fx-badge">{currentRate.otc_status}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {history.length > 0 && <Chart data={history} />}
+    </section>
   );
 }

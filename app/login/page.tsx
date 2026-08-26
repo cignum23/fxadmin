@@ -1,9 +1,11 @@
-// app/login/page.tsx
 "use client";
 
-import React, { useState, FormEvent, useEffect } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TrendingUp } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type FormState = {
   email: string;
@@ -17,7 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ FIX: redirect must happen in useEffect, not during render
+  // Redirect after auth state resolves so render stays side-effect free.
   useEffect(() => {
     if (isAuthenticated) {
       router.replace("/");
@@ -43,47 +45,55 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-card border border-border rounded-lg p-6 shadow-card">
-        <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
+    <main className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
+      <div className="auth-card rounded-2xl border border-border bg-white/80 p-6 shadow-card sm:p-8">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary">
+            <TrendingUp className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+          </div>
+          <div>
+            <p className="fx-label">FX Admin</p>
+            <h1 className="text-2xl font-bold text-[var(--color-text-strong)]">Sign in</h1>
+          </div>
+        </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-sm">Email</span>
-            <input
+            <span className="text-sm font-semibold text-foreground">Email</span>
+            <Input
               type="email"
               value={form.email}
               required
               onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
-              className="mt-1 block w-full rounded border border-input bg-background text-foreground px-3 py-2"
+              className="mt-1 h-11"
             />
           </label>
 
           <label className="block">
-            <span className="text-sm">Password</span>
-            <input
+            <span className="text-sm font-semibold text-foreground">Password</span>
+            <Input
               type="password"
               value={form.password}
               required
               onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
-              className="mt-1 block w-full rounded border border-input bg-background text-foreground px-3 py-2"
+              className="mt-1 h-11"
             />
           </label>
 
-          {error && <div className="text-sm text-danger">{error}</div>}
+          {error && (
+            <div className="rounded-md border border-danger/20 bg-danger/10 p-3 text-sm font-semibold text-danger">
+              {error}
+            </div>
+          )}
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-4 py-2 rounded bg-primary text-primary-foreground disabled:opacity-60"
-            >
-              {loading ? "Signing in…" : "Sign in"}
-            </button>
-          </div>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
 
-          <div className="text-sm flex justify-end">
-            <a href="/forgot-password" className="text-primary">Forgot password?</a>
+          <div className="flex justify-end text-sm">
+            <a href="/forgot-password" className="font-semibold text-foreground underline-offset-4 hover:underline">
+              Forgot password?
+            </a>
           </div>
         </form>
       </div>

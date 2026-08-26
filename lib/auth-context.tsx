@@ -20,7 +20,7 @@ type AuthContextValue = {
   signup: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   login: (email: string, password: string) => Promise<boolean>;
   signout: () => Promise<void>;
-  resetPassword: (email: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   // add any other helpers here (e.g., sendMagicLink)
 };
 
@@ -105,25 +105,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resetPassword = async (email: string, newPassword: string) => {
-    /**
-     * Supabase standard flow for password reset:
-     * - supabase.auth.resetPasswordForEmail(email, {redirectTo})
-     *   will send an email with a link where the user can set a new password.
-     *
-     * If you want to implement a server-side password reset (knowing a token), you can
-     * call supabase.auth.updateUser in the session with the access token.
-     *
-     * For the purposes of your UI (which currently simulates sending an email),
-     * this implementation will try the email-reset flow and return whether the request succeeded.
-     */
+  const resetPassword = async (email: string) => {
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        // optional: redirectTo: "https://your-domain.com/reset-callback",
+      const response = await fetch("/api/auth/password-reset/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
-      if (error) {
-        return { success: false, error: error.message };
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+        return { success: false, error: data?.error ?? "Failed to send reset email" };
       }
+
       return { success: true };
     } catch (err: unknown) {
       console.error("resetPassword error", err);
