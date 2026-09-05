@@ -1,5 +1,14 @@
 # fxadmin Implementation Log
 
+## 2026-08-26 - Vercel edge challenge identified for wallet current-rate
+
+- Re-read the prior public current-rate 429 fix and retested both production hosts with the wallet generated rate-read key without printing the key.
+- Confirmed both `https://fxadmin.cignumsolutions.net/api/fx/public/current-rate` and `https://fxadmin.vercel.app/api/fx/public/current-rate` return Vercel edge HTML, not app JSON: `HTTP/1.1 429 Too Many Requests`, `Content-Type: text/html; charset=utf-8`, `Server: Vercel`, and `X-Vercel-Mitigated: challenge`.
+- Root cause: Vercel Security Checkpoint / Bot Protection is challenging the API request before `app/api/fx/public/current-rate/route.ts` runs. This is distinct from the app's own JSON `429`, which includes `Retry-After: 60` and `X-RateLimit-Limit`.
+- Added `docs/VERCEL_FIREWALL_PUBLIC_FX_RATE.md` with the scoped Vercel Firewall rule required for the wallet endpoint: bypass challenge mitigation only for `GET /api/fx/public/current-rate` when a generated read key is presented via `Authorization: Bearer ...` or `x-api-key`.
+- Verification: local Vercel CLI is installed (`59.5.0`) and supports `vercel firewall`, but `vercel whoami` is logged out and no `VERCEL*` token is present in the shell environment, so the external Vercel firewall mutation was not applied from this machine. Sandboxed `yarn build` hit the known Windows `.next/trace` `EPERM`; scoped approved `yarn build` passed with 40 app routes, including `/api/fx/public/current-rate`.
+- APK export status: still blocked until Vercel firewall is updated and the public endpoint returns app JSON `200`.
+
 ## 2026-08-26 - Wallet public current-rate 429 fix
 
 - Fixed the wallet-facing `/api/fx/public/current-rate` limiter after the wallet fallback reached FX Admin but received `429`.

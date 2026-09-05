@@ -57,6 +57,9 @@ triggering a new rate calculation or any write-side engine behavior.
 **Rate limit:**
 The public current-rate endpoint uses a separate wallet-safe quota keyed by generated key plus caller IP. Default: `600` requests/minute. Override with `FX_PUBLIC_RATE_LIMIT_PER_MINUTE`.
 
+**Vercel edge protection:**
+If production returns HTML with `X-Vercel-Mitigated: challenge`, the request is being blocked by Vercel before this Next.js route runs. Apply the scoped firewall bypass in `docs/VERCEL_FIREWALL_PUBLIC_FX_RATE.md`; do not disable route auth or expose a Vercel automation bypass secret to mobile clients.
+
 **Example:**
 ```bash
 curl -H "Authorization: Bearer your_rate_read_key" \

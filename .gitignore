@@ -46,3 +46,12 @@ next-env.d.ts
 # stray local dev artifacts
 /test-vendors.js
 /build_output.log
+
+
+# others
+.impeccable
+.qodo
+/md-files
+
+
+
